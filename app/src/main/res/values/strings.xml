@@ -1,0 +1,38 @@
+<resources>
+    <!-- App Name -->
+    <string name="app_name">Planter App</string>
+    <string name="web_client_id" translatable="false">231238666500-dog8s5dfh8b3ccpdghc95i2hjh8vfsec.apps.googleusercontent.com</string>
+
+    <!-- Screen Titles -->
+    <string name="SIGN_IN_SCREEN_TITLE">Sign In</string>
+    <string name="HOME_SCREEN_TITLE">Home</string>
+    <string name="MY_PLANTS_SCREEN_TITLE">My Plants</string>
+    <string name="SETTINGS_SCREEN_TITLE" >Settings</string>
+    <string name="ABOUT_SCREEN_TITLE">About</string>
+
+    <!-- Sign-in Options -->
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_as_a_guest">Continue as a Guest</string>
+
+    <!-- Theme Options -->
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dynamic_theme">Dynamic Theme</string>
+
+    <!-- Button Labels -->
+    <string name="sign_in" >Sign In</string>
+    <string name="sign_out">Sign Out</string>
+
+    <!-- Navigation Drawer Labels -->
+    <string name="home">Home</string>
+    <string name="my_plants" >My Plants</string>
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+
+    <!-- Home Screen -->
+    <string name="disease_detection">Please upload or take a photo of the sick plant, ensuring that the image is clear and captures the target area.</string>
+
+    <string name="upload_image">Upload Image</string>
+    <string name="take_a_photo">Take a Photo</string>
+
+
+</resources>
