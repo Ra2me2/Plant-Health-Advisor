@@ -1,5 +1,7 @@
 package com.example.planter_app.firebase_login.sign_in
 
+import android.util.DisplayMetrics
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -8,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,15 +18,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,6 +41,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -53,6 +61,9 @@ import com.example.planter_app.R
 import com.example.planter_app.screens.home.HomeScreen
 import com.example.planter_app.screens.settings.SettingsViewModel
 import com.google.android.gms.auth.api.identity.Identity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -65,11 +76,13 @@ object SignInScreen : Screen {
         )
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         SettingsViewModel.appBarTitle.value = stringResource(id = R.string.SIGN_IN_SCREEN_TITLE)
 
         val navigator = LocalNavigator.currentOrThrow
+        val settingsViewModel = viewModel<SettingsViewModel>()
 
         // key1 = Unit -> execute this block only once
         // if the user is signed in already, go to the HomeScreen
@@ -123,131 +136,195 @@ object SignInScreen : Screen {
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        val pullToRefreshState = rememberPullToRefreshState()
+        val isRefreshing by settingsViewModel.isRefreshing.collectAsStateWithLifecycle()
+        val isNetworkAvailable = settingsViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
 
-            val painter =
-                rememberAsyncImagePainter(
-                    ImageRequest.Builder(LocalContext.current)
-                        .data(data = R.drawable.logo)
-                        .apply(block = fun ImageRequest.Builder.() {
-                            transformations(
-                                CircleCropTransformation(),
-                            )
-                            crossfade(1000)
-                            scale(scale = Scale.FIT)
-                        }).build(),
+        Box(
+            modifier = Modifier.nestedScroll(pullToRefreshState.nestedScrollConnection)
+        )
+        {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                item {
+                    val painter =
+                        rememberAsyncImagePainter(
+                            ImageRequest.Builder(LocalContext.current)
+                                .data(data = R.drawable.logo)
+                                .apply(block = fun ImageRequest.Builder.() {
+                                    transformations(
+                                        CircleCropTransformation(),
+                                    )
+                                    crossfade(800)
+                                    scale(scale = Scale.FIT)
+                                }).build(),
 //                    error = painterResource(id = R.drawable.),
 //                    placeholder = painterResource(id = R.drawable.)
-                )
-
-            Image(
-                painter = painter,
-                contentDescription = "image",
-                modifier = Modifier
-                    .size(width = 320.dp, height = 320.dp) // Fixed container size
-                    .padding(top = 30.dp, bottom = 30.dp)
-            )
-
-            Text(
-                text = stringResource(id = R.string.app_name),
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = MaterialTheme.typography.displaySmall.fontSize
-            )
-
-            if (loadingIcon) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .padding(top = 25.dp),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Button(
-                modifier = Modifier
-                    .padding(top = 70.dp),
-                shape = RoundedCornerShape(35.dp),
-                contentPadding = PaddingValues(vertical = 20.dp, horizontal = 80.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 2.dp,
-                    pressedElevation = 5.dp
-                ),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                onClick = {
-                    viewModel.setLoadingIcon(loading = true)
-                    viewModel.viewModelScope.launch {
-                        val signInIntentSender = googleAuthUiClient.signIn()
-                        launcher.launch(
-                            IntentSenderRequest.Builder(
-                                signInIntentSender ?: return@launch
-                            ).build()
                         )
-                    }
-                }
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
 
-                    Icon(
+                    Image(
+                        painter = painter,
+                        contentDescription = "image",
                         modifier = Modifier
-                            .height(25.dp)
-                            .padding(end = 20.dp),
-                        painter = painterResource(id = R.drawable.google_icon),
-                        contentDescription = "Leading Google Icon",
+                            .size(width = 320.dp, height = 320.dp) // Fixed container size
+                            .padding(top = 30.dp, bottom = 30.dp)
                     )
 
-                    Text(text = stringResource(id = R.string.sign_in_with_google))
-                }
-            }
-
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 20.dp),
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.secondary.copy(0.2f)
-            )
-            Text(modifier = Modifier.padding(bottom = 20.dp), text = "or")
-
-
-            OutlinedButton(
-                modifier = Modifier
-                    .padding(0.dp)
-                    .border(
-                        width = 1.dp,
+                    Text(
+                        text = stringResource(id = R.string.app_name),
                         color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(35.dp)
-                    ),
-                shape = RoundedCornerShape(35.dp),
-                contentPadding = PaddingValues(vertical = 20.dp, horizontal = 80.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 2.dp,
-                    pressedElevation = 5.dp
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
-                onClick = {
-                    viewModel.setLoadingIcon(loading = true)
-                    // Call the anonymous sign-in method
-                    viewModel.viewModelScope.launch {
-                        val signInResult = googleAuthUiClient.signInAnonymously()
-                        viewModel.onSignInResult(signInResult)
+                        fontSize = MaterialTheme.typography.displaySmall.fontSize
+                    )
+
+                    if (loadingIcon) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .padding(top = 25.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    Button(
+                        modifier = Modifier
+                            .padding(top = 70.dp),
+                        shape = RoundedCornerShape(35.dp),
+                        contentPadding = PaddingValues(vertical = 20.dp, horizontal = 80.dp),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 2.dp,
+                            pressedElevation = 5.dp
+                        ),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        onClick = {
+                            settingsViewModel.updateConnectionStatus()
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(100)
+
+                                if (isNetworkAvailable.value){
+                                    viewModel.setLoadingIcon(loading = true)
+
+                                    viewModel.viewModelScope.launch {
+                                        val signInIntentSender = googleAuthUiClient.signIn()
+                                        launcher.launch(
+                                            IntentSenderRequest.Builder(
+                                                signInIntentSender ?: return@launch
+                                            ).build()
+                                        )
+                                    }
+                                }
+                            }
+
+                        },
+                        enabled = isNetworkAvailable.value
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+
+                            Icon(
+                                modifier = Modifier
+                                    .height(25.dp)
+                                    .padding(end = 20.dp),
+                                painter = painterResource(id = R.drawable.google_icon),
+                                contentDescription = "Leading Google Icon",
+                            )
+
+                            Text(text = stringResource(id = R.string.sign_in_with_google))
+                        }
+                    }
+
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 20.dp),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.secondary.copy(0.2f)
+                    )
+                    Text(modifier = Modifier.padding(bottom = 20.dp), text = "or")
+
+
+                    OutlinedButton(
+                        modifier = Modifier
+                            .padding(0.dp)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(35.dp)
+                            ),
+                        shape = RoundedCornerShape(35.dp),
+                        contentPadding = PaddingValues(vertical = 20.dp, horizontal = 80.dp),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 2.dp,
+                            pressedElevation = 5.dp
+                        ),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        ),
+                        onClick = {
+                            settingsViewModel.updateConnectionStatus()
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(100)
+                                if (isNetworkAvailable.value){
+                                    viewModel.setLoadingIcon(loading = true)
+                                    // Call the anonymous sign-in method
+                                    viewModel.viewModelScope.launch {
+                                        val signInResult = googleAuthUiClient.signInAnonymously()
+                                        viewModel.onSignInResult(signInResult)
+                                    }
+                                }
+                            }
+
+                        },
+                        enabled = isNetworkAvailable.value
+                    ) {
+                        Text(text = stringResource(id = R.string.sign_in_as_a_guest))
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 15.dp)
+                    ) {
+                        if (!isNetworkAvailable.value) {
+                            Text(
+                                modifier = Modifier.align(Alignment.Center),
+                                color = MaterialTheme.colorScheme.error,
+                                text = stringResource(id = R.string.no_internet)
+                            )
+                        }
                     }
                 }
-            ) {
-                Text(text = stringResource(id = R.string.sign_in_as_a_guest))
             }
+
+            if (pullToRefreshState.isRefreshing) {
+                LaunchedEffect(true) {
+                    settingsViewModel.updateRefresh()
+                }
+            }
+
+            LaunchedEffect(isRefreshing) {
+                if (isRefreshing) {
+                    pullToRefreshState.startRefresh()
+                } else {
+                    pullToRefreshState.endRefresh()
+                }
+            }
+
+            PullToRefreshContainer(
+                state = pullToRefreshState,
+                modifier = Modifier
+                    .align(Alignment.TopCenter),
+            )
+
+
         }
     }
 }

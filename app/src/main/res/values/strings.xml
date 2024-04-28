@@ -7,6 +7,7 @@
     <string name="SIGN_IN_SCREEN_TITLE">Sign In</string>
     <string name="HOME_SCREEN_TITLE">Home</string>
     <string name="MY_PLANTS_SCREEN_TITLE">My Plants</string>
+    <string name="PLANTS_DETAILS_SCREEN_TITLE">Plant Info</string>
     <string name="SETTINGS_SCREEN_TITLE" >Settings</string>
     <string name="ABOUT_SCREEN_TITLE">About</string>
 
@@ -30,9 +31,15 @@
 
     <!-- Home Screen -->
     <string name="disease_detection">Please upload or take a photo of the sick plant, ensuring that the image is clear and captures the target area.</string>
-
     <string name="upload_image">Upload Image</string>
     <string name="take_a_photo">Take a Photo</string>
+    <string name="no_internet">Please check your internet connection!</string>
+
+    <!-- Plant Details Screen -->
+    <string name="plant_description">Plant Description</string>
+    <string name="disease_name">Disease Name</string>
+    <string name="treatment">Treatment</string>
+
 
 
 </resources>
