@@ -1,9 +1,17 @@
 package com.example.planter_app.screens.settings
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.example.planter_app.ConnectivityCheck
+import com.example.planter_app.MyApplication
+import com.example.planter_app.firebase_login.sign_in.GoogleAuthUiClient
+import com.example.planter_app.firebase_login.sign_in.SignInScreen
+import com.example.planter_app.screens.home.HomeScreen
+import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +44,16 @@ class SettingsViewModel:ViewModel(){
             delay(1000L)
             _isRefreshing.value = false
         }
+    }
+
+    fun isUserLoggedIn(): Boolean{
+        val googleAuthUiClient by lazy {
+            GoogleAuthUiClient(
+                context = MyApplication.instance!!.applicationContext,
+                oneTapClient = Identity.getSignInClient(MyApplication.instance!!.applicationContext)
+            )
+        }
+        return googleAuthUiClient.getSignedInUser() != null
     }
 
 }
