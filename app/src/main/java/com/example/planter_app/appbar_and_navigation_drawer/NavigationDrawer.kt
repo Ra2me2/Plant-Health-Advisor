@@ -1,4 +1,4 @@
-package com.example.planter_app.navigation_drawer
+package com.example.planter_app.appbar_and_navigation_drawer
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -21,8 +21,6 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.DrawerState
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,8 +31,6 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +42,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.CurrentScreen
@@ -56,13 +51,11 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.example.planter_app.R
 import com.example.planter_app.screens.about.AboutScreen
 import com.example.planter_app.screens.home.HomeScreen
-import com.example.planter_app.screens.home.HomeScreenContent
 import com.example.planter_app.screens.my_plants.MyPlantsScreen
 import com.example.planter_app.screens.settings.SettingsScreen
 import com.example.planter_app.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
@@ -73,6 +66,14 @@ fun NavigationDrawer(
     navigator: Navigator,
 ) {
     val selectedNavItem = remember { mutableStateOf(Icons.Outlined.Home) }
+    selectedNavItem.value = when(SettingsViewModel.appBarTitle.value){
+        stringResource(id = R.string.HOME_SCREEN_TITLE) -> Icons.Outlined.Home
+        stringResource(id = R.string.MY_PLANTS_SCREEN_TITLE) -> Icons.Outlined.Eco
+        stringResource(id = R.string.SETTINGS_SCREEN_TITLE) -> Icons.Outlined.Settings
+        stringResource(id = R.string.ABOUT_SCREEN_TITLE) -> Icons.Outlined.Info
+        else -> {Icons.Outlined.Home}
+    }
+
     val localNavigator = LocalNavigator.currentOrThrow
     ModalNavigationDrawer(
         modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
@@ -82,22 +83,18 @@ fun NavigationDrawer(
             NavigationDrawerContent(
                 selectedNavItem,
                 onClickHome = {
-                    selectedNavItem.value = Icons.Outlined.Home
                     localNavigator.push(HomeScreen)
                     scope.launch { drawerState.close() }
                 },
                 onClickMyPlants = {
-                    selectedNavItem.value = Icons.Outlined.Eco
                     localNavigator.push(MyPlantsScreen)
                     scope.launch { drawerState.close() }
                 },
                 onClickSettings = {
-                    selectedNavItem.value = Icons.Outlined.Settings
                     localNavigator.push(SettingsScreen)
                     scope.launch { drawerState.close() }
                 },
                 onClickAbout = {
-                    selectedNavItem.value = Icons.Outlined.Info
                     localNavigator.push(AboutScreen)
                     scope.launch { drawerState.close() }
                 }
@@ -106,7 +103,6 @@ fun NavigationDrawer(
         content = {
             CurrentScreen()
         })
-
 }
 
 @Composable

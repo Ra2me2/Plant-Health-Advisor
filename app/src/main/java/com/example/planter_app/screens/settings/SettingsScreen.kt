@@ -3,6 +3,7 @@ package com.example.planter_app.screens.settings
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +39,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,18 +50,18 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil.compose.AsyncImage
 import com.example.planter_app.MyApplication
 import com.example.planter_app.R
+import com.example.planter_app.ThemePreferences
 import com.example.planter_app.firebase_login.sign_in.GoogleAuthUiClient
 import com.example.planter_app.firebase_login.sign_in.SignInScreen
 import com.example.planter_app.firebase_login.sign_in.SignInViewModel
-import com.example.planter_app.navigation_drawer.AppBar
-import com.example.planter_app.screens.about.AboutScreenContent
+import com.example.planter_app.appbar_and_navigation_drawer.AppBar
 import com.example.planter_app.ui.theme.Planter_appTheme
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.launch
 
 
 object SettingsScreen : Screen {
-    val googleAuthUiClient by lazy {
+    private val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
             context = MyApplication.instance!!.applicationContext,
             oneTapClient = Identity.getSignInClient(MyApplication.instance!!.applicationContext)
@@ -73,11 +75,9 @@ object SettingsScreen : Screen {
     override fun Content() {
         SettingsViewModel.appBarTitle.value = stringResource(id = R.string.SETTINGS_SCREEN_TITLE)
 
-
         val navigator = LocalNavigator.currentOrThrow
-
         val signInScreenViewModel = viewModel<SignInViewModel>()
-        val viewModel = viewModel<SettingsViewModel>()
+        val settingsViewModel = viewModel<SettingsViewModel>()
 
         val profilePicture = if (googleAuthUiClient.getSignedInUser()?.profilePictureURL != null) {
             googleAuthUiClient.getSignedInUser()?.profilePictureURL
@@ -95,7 +95,7 @@ object SettingsScreen : Screen {
             profilePicture,
             userName,
             onClickSignOut = {
-                viewModel.viewModelScope.launch {
+                settingsViewModel.viewModelScope.launch {
                     googleAuthUiClient.signOut()
                     Toast.makeText(
                         MyApplication.instance!!.applicationContext,
@@ -107,6 +107,13 @@ object SettingsScreen : Screen {
             },
             noSignedInUser = {
                 googleAuthUiClient.getSignedInUser()?.username == null
+            },
+            onClickToggle = {
+                val themePreferences = ThemePreferences(MyApplication.instance!!.applicationContext)
+                themePreferences.saveTheme(
+                    darkTheme = SettingsViewModel.darkMode.value,
+                    dynamicTheme = SettingsViewModel.dynamicTheme.value
+                )
             }
         )
     }
@@ -119,12 +126,24 @@ fun SettingsScreenContent(
     userName: String?,
     onClickSignOut: () -> Unit,
     noSignedInUser: () -> Boolean,
-    paddingValesFromPreview: PaddingValues?=null
+    paddingValesFromPreview: PaddingValues? = null,
+    onClickToggle: () -> Unit
 ) {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(id = R.drawable.leaf),
+            contentDescription = "",
+            contentScale = ContentScale.Crop,
+            alpha = 0.3f
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = paddingValesFromPreview?.calculateTopPadding()?: 20.dp),
+            .padding(top = paddingValesFromPreview?.calculateTopPadding() ?: 20.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -149,9 +168,6 @@ fun SettingsScreenContent(
             )
         }
 
-
-
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
@@ -169,37 +185,50 @@ fun SettingsScreenContent(
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 35.dp, end = 35.dp, bottom = 10.dp)
+                .padding(20.dp)
         ) {
             item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    SwitchSettings(
-                        text = stringResource(id = R.string.dark_mode),
-                        setting = SettingsScreen.normalTheme
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 5.dp
                     )
-                }
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.secondary.copy(0.2f)
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    SwitchSettings(
-                        text = stringResource(id = R.string.dynamic_theme),
-                        setting = SettingsScreen.dynamicTheme
+                    Row(
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        SwitchSettings(
+                            text = stringResource(id = R.string.dark_mode),
+                            setting = SettingsScreen.normalTheme,
+                            onClickToggle = onClickToggle
+                        )
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.2f)
                     )
+
+                    Row(
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        SwitchSettings(
+                            text = stringResource(id = R.string.dynamic_theme),
+                            setting = SettingsScreen.dynamicTheme,
+                            onClickToggle = onClickToggle
+                        )
+                    }
                 }
-
-//                    Text(text = "${googleAuthUiClient.getSignedInUser()?.userId}")
-
             }
         }
 
@@ -211,14 +240,17 @@ fun SettingsScreenContent(
             if (noSignedInUser()) {
                 SignInOutButtons(
                     buttonText = stringResource(id = R.string.sign_in),
-                    onClick = { /*TODO*/ })
+                    onClickSignInOut = { /*TODO*/ }
+                )
             }
 
             SignInOutButtons(
                 buttonText = stringResource(id = R.string.sign_out),
-                onClick = {
+                onClickSignInOut = {
                     onClickSignOut()
-                })
+                }
+            )
+
         }
     }
 }
@@ -226,7 +258,7 @@ fun SettingsScreenContent(
 @Composable
 private fun SignInOutButtons(
     buttonText: String,
-    onClick: () -> Unit
+    onClickSignInOut: () -> Unit,
 ) {
     Button(
         modifier = Modifier
@@ -236,14 +268,18 @@ private fun SignInOutButtons(
             pressedElevation = 5.dp
         ),
         onClick = {
-            onClick()
+            onClickSignInOut()
         }) {
         Text(text = buttonText)
     }
 }
 
 @Composable
-private fun RowScope.SwitchSettings(text: String, setting: String) {
+private fun RowScope.SwitchSettings(
+    text: String,
+    setting: String,
+    onClickToggle: () -> Unit
+) {
 
     Text(
         text = text,
@@ -263,6 +299,7 @@ private fun RowScope.SwitchSettings(text: String, setting: String) {
             } else {
                 SettingsViewModel.dynamicTheme.value = !SettingsViewModel.dynamicTheme.value
             }
+            onClickToggle()
         },
         modifier = Modifier
             .size(50.dp)
@@ -299,7 +336,8 @@ fun SettingsPreview() {
                     userName = "this is you",
                     onClickSignOut = {},
                     noSignedInUser = { true },
-                    paddingValesFromPreview = paddingVales
+                    paddingValesFromPreview = paddingVales,
+                    onClickToggle = {}
                 )
             }
         }

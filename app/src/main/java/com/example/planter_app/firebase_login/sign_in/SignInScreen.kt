@@ -30,7 +30,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -47,7 +46,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,9 +60,7 @@ import coil.size.Scale
 import coil.transform.CircleCropTransformation
 import com.example.planter_app.MyApplication
 import com.example.planter_app.R
-import com.example.planter_app.navigation_drawer.AppBar
 import com.example.planter_app.screens.home.HomeScreen
-import com.example.planter_app.screens.home.HomeScreenContent
 import com.example.planter_app.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 import com.google.android.gms.auth.api.identity.Identity
@@ -154,7 +150,7 @@ object SignInScreen : Screen {
                             viewModel.setLoadingIcon(loading = true)
 
                             viewModel.viewModelScope.launch {
-                                val signInIntentSender = SignInScreen.googleAuthUiClient.signIn()
+                                val signInIntentSender = googleAuthUiClient.signIn()
                                 launcher.launch(
                                     IntentSenderRequest.Builder(
                                         signInIntentSender ?: return@launch
@@ -174,7 +170,7 @@ object SignInScreen : Screen {
                             // Call the anonymous sign-in method
                             viewModel.viewModelScope.launch {
                                 val signInResult =
-                                    SignInScreen.googleAuthUiClient.signInAnonymously()
+                                    googleAuthUiClient.signInAnonymously()
                                 viewModel.onSignInResult(signInResult)
                             }
                         }
@@ -215,7 +211,17 @@ fun SignInScreenContent(
     onClickSignAsGuest: () -> Unit,
     comingFromPreviews : Boolean,
 ) {
-
+    Box(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(id = R.drawable.leaf),
+            contentDescription = "",
+            contentScale = ContentScale.Crop,
+            alpha = 0.3f
+        )
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize(),
@@ -335,7 +341,7 @@ fun SignInScreenContent(
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
                 onClick = {
                     onClickSignAsGuest()
@@ -363,7 +369,6 @@ fun SignInScreenContent(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
 fun SignInScreenPreview() {
@@ -372,7 +377,7 @@ fun SignInScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ){
-            Scaffold(){ paddingVales ->
+            Scaffold { paddingVales ->
                 Spacer(modifier = Modifier.padding(top = paddingVales.calculateTopPadding()))
                 SignInScreenContent(
                     loadingIcon = remember { mutableStateOf(false) },

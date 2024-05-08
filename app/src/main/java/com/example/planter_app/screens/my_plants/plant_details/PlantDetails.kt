@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,7 +35,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -43,8 +44,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import com.example.planter_app.R
-import com.example.planter_app.navigation_drawer.AppBar
-import com.example.planter_app.screens.about.AboutScreenContent
+import com.example.planter_app.appbar_and_navigation_drawer.AppBar
 import com.example.planter_app.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 
@@ -54,12 +54,12 @@ data class PlantDetails(val uri: List<String> = emptyList()) : Screen {
     @Composable
     override fun Content() {
         SettingsViewModel.appBarTitle.value =
-            stringResource(id = R.string.PLANTS_DETAILS_SCREEN_TITLE)
+            stringResource(id = R.string.PLANT_INFO_SCREEN_TITLE)
 
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
 
-        var imageClicked = remember { mutableStateOf(false) }
+        val imageClicked = remember { mutableStateOf(false) }
 
         if (imageClicked.value) {
             navigator.push(PlantImagesDisplay(uri))
@@ -109,68 +109,109 @@ fun PlantDetailsContent(
             contentScale = ContentScale.FillWidth,
         )
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 15.dp, start = 15.dp, end = 15.dp),
-        ) {
-            item {
-                Text(
-                    modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
-                    text = "${stringResource(id = R.string.plant_description)}:  ",
-                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                    color = MaterialTheme.colorScheme.primary,
-                    style = TextStyle.Default.copy(fontWeight = FontWeight.Bold)
-                )
-                Text(
-                    modifier = Modifier.padding(bottom = 10.dp),
-                    text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
-                    textAlign = TextAlign.Justify,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+        )
+        {
+            Image(
+                modifier = Modifier.fillMaxSize(),
+                painter = painterResource(id = R.drawable.leaf),
+                contentDescription = "",
+                contentScale = ContentScale.Crop,
+                alpha = 0.3f
+            )
 
-                Row(
-                    modifier = Modifier.padding(bottom = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "${stringResource(id = R.string.disease_name)}:  ",
-                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                        color = MaterialTheme.colorScheme.primary,
-                        style = TextStyle.Default.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Text(
-                        text = "Disease Type / Not detected",
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 15.dp, start = 15.dp, end = 15.dp),
+            ) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        ),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 5.dp
+                        )
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(20.dp),
+                            text = "${stringResource(id = R.string.plant_description)}:  ",
+                            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                            style = TextStyle.Default.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
+                            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
+                            textAlign = TextAlign.Justify,
+                        )
+
+                    }
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        ),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 5.dp
+                        )
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(20.dp),
+                            text = "${stringResource(id = R.string.disease_name)}:  ",
+                            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                            style = TextStyle.Default.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                            text = "Disease Type / Not detected",
+                        )
+                    }
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        ),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 5.dp
+                        )
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(20.dp),
+                            text = "${stringResource(id = R.string.treatment)}:  ",
+                            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                            style = TextStyle.Default.copy(fontWeight = FontWeight.Bold)
+                        )
+
+                        Text(
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
+                            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
+                            textAlign = TextAlign.Justify,
+                        )
+                        Text(
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
+                            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
+                            textAlign = TextAlign.Justify,
+                        )
+                        Text(
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
+                            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
+                            textAlign = TextAlign.Justify,
+                        )
+                    }
                 }
-
-
-                Text(
-                    modifier = Modifier.padding(bottom = 10.dp),
-                    text = "${stringResource(id = R.string.treatment)}:  ",
-                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                    color = MaterialTheme.colorScheme.primary,
-                    style = TextStyle.Default.copy(fontWeight = FontWeight.Bold)
-                )
-
-                Text(
-                    modifier = Modifier.padding(bottom = 10.dp),
-                    text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
-                    textAlign = TextAlign.Justify,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-                Text(
-                    modifier = Modifier.padding(bottom = 10.dp),
-                    text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
-                    textAlign = TextAlign.Justify,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-                Text(
-                    text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
-                    textAlign = TextAlign.Justify,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
             }
         }
     }
@@ -190,7 +231,7 @@ fun PlantDetailsPreview() {
                     AppBar(
                         onNavigationIconClick = {},
                         scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
-                        titleComingFromPreviews = stringResource(id = R.string.PLANTS_DETAILS_SCREEN_TITLE)
+                        titleComingFromPreviews = stringResource(id = R.string.PLANT_INFO_SCREEN_TITLE)
                     )
                 }
             ) { paddingVales ->

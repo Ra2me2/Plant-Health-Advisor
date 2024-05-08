@@ -2,6 +2,7 @@ package com.example.planter_app.screens.about
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,19 +16,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import com.example.planter_app.R
-import com.example.planter_app.navigation_drawer.AppBar
-import com.example.planter_app.screens.home.HomeScreenContent
+import com.example.planter_app.appbar_and_navigation_drawer.AppBar
 import com.example.planter_app.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 
@@ -45,6 +44,17 @@ object AboutScreen : Screen {
 fun AboutScreenContent(
 
 ) {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(id = R.drawable.leaf),
+            contentDescription = "",
+            contentScale = ContentScale.Crop,
+            alpha = 0.3f
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()

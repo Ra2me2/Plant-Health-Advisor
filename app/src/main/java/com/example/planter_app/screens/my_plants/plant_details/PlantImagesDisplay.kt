@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +19,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,7 +34,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -44,8 +43,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import com.example.planter_app.R
-import com.example.planter_app.navigation_drawer.AppBar
-import com.example.planter_app.screens.home.HomeScreenContent
+import com.example.planter_app.appbar_and_navigation_drawer.AppBar
 import com.example.planter_app.ui.theme.Planter_appTheme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -84,26 +82,39 @@ data class PlantImagesDisplay(val uri: List<String>) : Screen {
 fun PlantImagesDisplayContent(
     onClick: () -> Unit,
     pagerState: PagerState = rememberPagerState(pageCount = { 1 }), // Default to 1 page
-    colorMatrix: ColorMatrix?= null, // Default empty ColorMatrix
-    uri: List<String>?=null,
+    colorMatrix: ColorMatrix? = null, // Default empty ColorMatrix
+    uri: List<String>? = null,
 
     ) {
-    HorizontalPager(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable {
-                onClick()
-            },
-        state = pagerState,
-        verticalAlignment = Alignment.CenterVertically
-    ) { index ->
+    Box(
+        modifier = Modifier.fillMaxSize(),
 
-        val pageOffSet =
-            (pagerState.currentPage - index) + pagerState.currentPageOffsetFraction
-        val imageSize by animateFloatAsState(
-            targetValue = if (pageOffSet != 0.0f) 0.90f else 1f,
-            animationSpec = tween(300), label = ""
+        ) {
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(id = R.drawable.leaf),
+            contentDescription = "",
+            contentScale = ContentScale.Crop,
+            alpha = 0.3f
         )
+    }
+
+        HorizontalPager(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable {
+                    onClick()
+                },
+            state = pagerState,
+            verticalAlignment = Alignment.CenterVertically
+        ) { index ->
+
+            val pageOffSet =
+                (pagerState.currentPage - index) + pagerState.currentPageOffsetFraction
+            val imageSize by animateFloatAsState(
+                targetValue = if (pageOffSet != 0.0f) 0.90f else 1f,
+                animationSpec = tween(300), label = ""
+            )
 
 //            LaunchedEffect(key1 = imageSize) {
 //                if (pageOffSet != 0.0f) {
@@ -114,42 +125,41 @@ fun PlantImagesDisplayContent(
 //            }
 
 
+            val painter = if (!uri.isNullOrEmpty()) {
+                rememberAsyncImagePainter(
 
-        val painter = if (!uri.isNullOrEmpty()){
-            rememberAsyncImagePainter(
+                    ImageRequest.Builder(LocalContext.current)
+                        .data(uri[index])
+                        .apply(block = fun ImageRequest.Builder.() {
+                            crossfade(800)
+                            scale(scale = Scale.FIT)
+                        }).build(),
+                    //                    error = painterResource(),
+                    //                    placeholder = painterResource()
+                )
+            } else {
+                painterResource(id = R.drawable.tree_robots_1)
+            }
 
-                ImageRequest.Builder(LocalContext.current)
-                    .data(uri?.get(index))
-                    .apply(block = fun ImageRequest.Builder.() {
-                        crossfade(800)
-                        scale(scale = Scale.FIT)
-                    }).build(),
-                //                    error = painterResource(),
-                //                    placeholder = painterResource()
+
+            Image(
+                painter = painter,
+                contentDescription = "image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp)
+                    .padding(12.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .graphicsLayer {
+                        scaleX = imageSize
+                        scaleY = imageSize
+                        shape = RoundedCornerShape(20.dp)
+                        clip = true
+                    },
+                contentScale = ContentScale.Crop,
+                colorFilter = colorMatrix?.let { ColorFilter.colorMatrix(it) },
             )
-        }else{
-            painterResource(id = R.drawable.tree_robots_1)
         }
-       
-
-        Image(
-            painter = painter,
-            contentDescription = "image",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-                .padding(12.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .graphicsLayer {
-                    scaleX = imageSize
-                    scaleY = imageSize
-                    shape = RoundedCornerShape(20.dp)
-                    clip = true
-                },
-            contentScale = ContentScale.Crop,
-            colorFilter = colorMatrix?.let { ColorFilter.colorMatrix(it) },
-        )
-    }
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -160,16 +170,16 @@ fun PlantImagesDisplay() {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
-        ){
+        ) {
             Scaffold(
                 topBar = {
                     AppBar(
                         onNavigationIconClick = {},
                         scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
-                        titleComingFromPreviews = stringResource(id = R.string.PLANTS_DETAILS_SCREEN_TITLE)
+                        titleComingFromPreviews = stringResource(id = R.string.PLANT_INFO_SCREEN_TITLE)
                     )
                 }
-            ){ paddingVales ->
+            ) { paddingVales ->
                 Spacer(modifier = Modifier.padding(top = paddingVales.calculateTopPadding()))
                 PlantImagesDisplayContent(
                     onClick = { },

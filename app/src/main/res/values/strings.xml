@@ -7,7 +7,7 @@
     <string name="SIGN_IN_SCREEN_TITLE">Sign In</string>
     <string name="HOME_SCREEN_TITLE">Home</string>
     <string name="MY_PLANTS_SCREEN_TITLE">My Plants</string>
-    <string name="PLANTS_DETAILS_SCREEN_TITLE">Plant Info</string>
+    <string name="PLANT_INFO_SCREEN_TITLE">Plant Info</string>
     <string name="SETTINGS_SCREEN_TITLE" >Settings</string>
     <string name="ABOUT_SCREEN_TITLE">About</string>
 

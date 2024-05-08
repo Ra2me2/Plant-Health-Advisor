@@ -3,7 +3,9 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.gms.google-services")
 
+    id("com.google.devtools.ksp")
 }
+
 
 android {
     namespace = "com.example.planter_app"
@@ -85,6 +87,11 @@ dependencies {
     // Transitions
     implementation(libs.voyager.transitions)
 
-    
 
+    // Room components
+    implementation (libs.androidx.room.runtime)
+    implementation (libs.androidx.room.ktx)
+    annotationProcessor (libs.androidx.room.compiler)
+    androidTestImplementation (libs.androidx.room.testing)
+    ksp(libs.androidx.room.compiler)
 }

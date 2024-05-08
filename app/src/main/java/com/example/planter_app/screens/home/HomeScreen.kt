@@ -1,10 +1,6 @@
 package com.example.planter_app.screens.home
 
-import android.content.ContentValues.TAG
-import android.content.res.Configuration
 import android.net.Uri
-import android.util.Log
-import android.widget.Space
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -28,6 +24,8 @@ import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,10 +40,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,9 +50,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewDynamicColors
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,21 +62,22 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.transform.CircleCropTransformation
+import com.example.planter_app.ui.theme.Planter_appTheme
 import com.example.planter_app.R
-import com.example.planter_app.firebase_login.sign_in.SignInScreen
-import com.example.planter_app.navigation_drawer.AppBar
-import com.example.planter_app.navigation_drawer.NavigationDrawer
+import com.example.planter_app.appbar_and_navigation_drawer.AppBar
 import com.example.planter_app.screens.my_plants.plant_details.PlantDetails
 import com.example.planter_app.screens.settings.SettingsViewModel
-import com.example.planter_app.ui.theme.Planter_appTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import kotlin.coroutines.Continuation
+import kotlin.random.Random
 
 object HomeScreen : Screen {
+    // executes once only. every time user opens the app, an image at random will be displayed
+    private val homeScreenImage by lazy {
+        homeScreenImage()
+    }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -97,7 +91,7 @@ object HomeScreen : Screen {
 
         val isNetworkAvailable = settingsViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
 
-        val (currentImageIndex, multiplePhotoPicker, imageList) = multiplePhotoPicker(
+        val multiplePhotoPicker = multiplePhotoPicker(
             homeViewModel = homeViewModel,
             navigator = navigator
         )
@@ -111,7 +105,7 @@ object HomeScreen : Screen {
         )
         {
             HomeScreenContent(
-                imageList[currentImageIndex],
+                homeScreenImage,
                 updateConnectionStatus = {
                     settingsViewModel.updateConnectionStatus()
                 },
@@ -156,6 +150,18 @@ fun HomeScreenContent(
     paddingValuesfromPreview: PaddingValues? = null,
 
     ) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(id = R.drawable.leaf),
+            contentDescription = "",
+            contentScale = ContentScale.Crop,
+            alpha = 0.3f
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -163,12 +169,13 @@ fun HomeScreenContent(
         horizontalAlignment = Alignment.Start
     ) {
         item {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = paddingValuesfromPreview?.calculateTopPadding() ?: 0.dp),
                 verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
 
                 if (image != null) {
@@ -206,80 +213,88 @@ fun HomeScreenContent(
                     )
                     Spacer(modifier = Modifier.padding(bottom = 30.dp))
                 }
-
-
             }
 
-
-            Text(
-                modifier = Modifier.padding(bottom = 30.dp),
-                color = MaterialTheme.colorScheme.secondary,
-                text = stringResource(id = R.string.disease_detection)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 5.dp
+                )
             ) {
-
-                Button(
-                    onClick = {
-                        updateConnectionStatus()
-                        CoroutineScope(Dispatchers.Main).launch {
-                            delay(100)
-                            if (isNetworkAvailable.value) {
-                                multiplePhotoPickerLaunch()
-                            }
-                        }
-                    },
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 2.dp,
-                        pressedElevation = 5.dp
-                    ),
-                    enabled = isNetworkAvailable.value
+                Text(
+                    modifier = Modifier.padding(20.dp),
+                    text = stringResource(id = R.string.disease_detection)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    Row {
-                        Icon(
-                            modifier = Modifier
-                                .height(20.dp)
-                                .padding(end = 10.dp),
-                            imageVector = Icons.Default.Upload,
-                            contentDescription = "Upload an image",
-                        )
-                        Text(text = stringResource(id = R.string.upload_image))
 
+                    Button(
+                        modifier = Modifier.padding(bottom = 20.dp),
+                        onClick = {
+                            updateConnectionStatus()
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(100)
+                                if (isNetworkAvailable.value) {
+                                    multiplePhotoPickerLaunch()
+                                }
+                            }
+                        },
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 2.dp,
+                            pressedElevation = 5.dp
+                        ),
+                        enabled = isNetworkAvailable.value
+                    ) {
+
+                        Row {
+                            Icon(
+                                modifier = Modifier
+                                    .height(20.dp)
+                                    .padding(end = 10.dp),
+                                imageVector = Icons.Default.Upload,
+                                contentDescription = "Upload an image",
+                            )
+                            Text(text = stringResource(id = R.string.upload_image))
+                        }
                     }
-                }
 
 
-                Button(
-                    onClick = {
-                        updateConnectionStatus()
-                        CoroutineScope(Dispatchers.Main).launch {
-                            delay(100)
+                    Button(
+                        modifier = Modifier.padding(bottom = 20.dp),
+                        onClick = {
+                            updateConnectionStatus()
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(100)
 
-                            if (isNetworkAvailable.value) {
-                                /*TODO*/
+                                if (isNetworkAvailable.value) {
+                                    /*TODO*/
 
+                                }
                             }
+
+                        },
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 2.dp,
+                            pressedElevation = 5.dp
+                        ),
+                        enabled = isNetworkAvailable.value
+                    ) {
+                        Row {
+                            Icon(
+                                modifier = Modifier
+                                    .height(20.dp)
+                                    .padding(end = 10.dp),
+                                imageVector = Icons.Default.Camera,
+                                contentDescription = "",
+                            )
+                            Text(text = stringResource(id = R.string.take_a_photo))
+
                         }
-
-                    },
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 2.dp,
-                        pressedElevation = 5.dp
-                    ),
-                    enabled = isNetworkAvailable.value
-                ) {
-                    Row {
-                        Icon(
-                            modifier = Modifier
-                                .height(20.dp)
-                                .padding(end = 10.dp),
-                            imageVector = Icons.Default.Camera,
-                            contentDescription = "",
-                        )
-                        Text(text = stringResource(id = R.string.take_a_photo))
-
                     }
                 }
             }
@@ -305,7 +320,7 @@ fun HomeScreenContent(
 fun multiplePhotoPicker(
     homeViewModel: HomeViewModel,
     navigator: Navigator
-): Triple<Int, ManagedActivityResultLauncher<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>, List<Int>> {
+): ManagedActivityResultLauncher<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>> {
     val multiplePhotoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 3),
         onResult = { uri ->
@@ -316,7 +331,10 @@ fun multiplePhotoPicker(
             }
         }
     )
+    return multiplePhotoPicker
+}
 
+fun homeScreenImage(): Int {
     val imageList = listOf(
         R.drawable.tree_robots_1,
         R.drawable.tree_robots_2,
@@ -337,21 +355,9 @@ fun multiplePhotoPicker(
         R.drawable.tree_robots_17,
         R.drawable.tree_robots_18
     )
+    val currentImageIndex = Random.nextInt(imageList.size)
 
-    val calendar = Calendar.getInstance()
-    val currentDayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
-
-    Log.i(TAG, "Content: date is $currentDayOfYear")
-
-    var currentImageIndex by remember { mutableIntStateOf(0) }
-
-    LaunchedEffect(key1 = currentImageIndex) {
-        while (true) {
-            delay(30_000) // will change to 1 day later...
-            currentImageIndex = (currentImageIndex + 1) % imageList.size
-        }
-    }
-    return Triple(currentImageIndex, multiplePhotoPicker, imageList)
+    return imageList[currentImageIndex]
 }
 
 
@@ -383,5 +389,6 @@ fun HomeScreenPreview() {
         }
     }
 }
+
 
 
