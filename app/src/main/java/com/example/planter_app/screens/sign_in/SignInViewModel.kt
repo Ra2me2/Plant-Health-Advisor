@@ -1,15 +1,13 @@
-package com.example.planter_app.firebase_login.sign_in
+package com.example.planter_app.screens.sign_in
 
-import androidx.activity.result.IntentSenderRequest
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.planter_app.MyApplication
-import com.google.android.gms.auth.api.identity.Identity
+import com.example.planter_app.firebase_login.sign_in.SignInResult
+import com.example.planter_app.firebase_login.sign_in.SignInState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+
 
 class SignInViewModel : ViewModel() {
 

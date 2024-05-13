@@ -50,11 +50,11 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil.compose.AsyncImage
 import com.example.planter_app.MyApplication
 import com.example.planter_app.R
-import com.example.planter_app.ThemePreferences
 import com.example.planter_app.firebase_login.sign_in.GoogleAuthUiClient
-import com.example.planter_app.firebase_login.sign_in.SignInScreen
-import com.example.planter_app.firebase_login.sign_in.SignInViewModel
 import com.example.planter_app.appbar_and_navigation_drawer.AppBar
+import com.example.planter_app.screens.sign_in.SignInScreen
+import com.example.planter_app.screens.sign_in.SignInViewModel
+import com.example.planter_app.shared_preferences.ThemePreferences
 import com.example.planter_app.ui.theme.Planter_appTheme
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.launch
@@ -150,7 +150,7 @@ fun SettingsScreenContent(
 
         if (profilePicture == null) {
             Image(
-                painter = painterResource(id = R.drawable.logo),
+                painter = painterResource(id = R.drawable.guest_user_profile_dp),
                 contentDescription = "",
                 modifier = Modifier
                     .size(150.dp)
@@ -333,7 +333,7 @@ fun SettingsPreview() {
             ) { paddingVales ->
                 Spacer(modifier = Modifier.padding(top = paddingVales.calculateTopPadding()))
                 SettingsScreenContent(
-                    userName = "this is you",
+                    userName = "user name",
                     onClickSignOut = {},
                     noSignedInUser = { true },
                     paddingValesFromPreview = paddingVales,

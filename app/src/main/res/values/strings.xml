@@ -1,6 +1,6 @@
 <resources>
     <!-- App Name -->
-    <string name="app_name">Planter App</string>
+    <string name="app_name">Plant Health Advisor</string>
     <string name="web_client_id" translatable="false">231238666500-dog8s5dfh8b3ccpdghc95i2hjh8vfsec.apps.googleusercontent.com</string>
 
     <!-- Screen Titles -->

@@ -1,8 +1,7 @@
 package com.example.planter_app.screens.home
 
-import android.net.Uri
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.compose.rememberLauncherForActivityResult
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -38,7 +37,6 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,20 +50,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.transform.CircleCropTransformation
+import com.example.planter_app.MyApplication
 import com.example.planter_app.ui.theme.Planter_appTheme
 import com.example.planter_app.R
 import com.example.planter_app.appbar_and_navigation_drawer.AppBar
-import com.example.planter_app.screens.my_plants.plant_details.PlantDetails
+import com.example.planter_app.image_capture_n_picker.captureImageFromCamera
+import com.example.planter_app.image_capture_n_picker.singlePhotoPickerFromGallery
 import com.example.planter_app.screens.settings.SettingsViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -85,17 +85,17 @@ object HomeScreen : Screen {
         SettingsViewModel.appBarTitle.value = stringResource(id = R.string.HOME_SCREEN_TITLE)
 
         val navigator = LocalNavigator.currentOrThrow
-        val homeViewModel = viewModel<HomeViewModel>()
         val settingsViewModel = viewModel<SettingsViewModel>()
-        val imageUri = homeViewModel.imageUri.collectAsState()
 
         val isNetworkAvailable = settingsViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
 
-        val multiplePhotoPicker = multiplePhotoPicker(
-            homeViewModel = homeViewModel,
+        val singlePhotoPicker = singlePhotoPickerFromGallery(
             navigator = navigator
         )
 
+        val (uri,permissionLauncher, cameraLauncher) = captureImageFromCamera(
+            navigator = navigator
+        )
 
         val pullToRefreshState = rememberPullToRefreshState()
         val isRefreshing by settingsViewModel.isRefreshing.collectAsStateWithLifecycle()
@@ -110,10 +110,20 @@ object HomeScreen : Screen {
                     settingsViewModel.updateConnectionStatus()
                 },
                 isNetworkAvailable,
-                multiplePhotoPickerLaunch = {
-                    multiplePhotoPicker.launch(
+                singlePhotoPickerLaunch = {
+                    singlePhotoPicker.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
+                },
+                captureImageLaunch = {
+                    val permissionCheckResult =
+                        ContextCompat.checkSelfPermission(MyApplication.instance!!.applicationContext, Manifest.permission.CAMERA)
+                    if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
+                        cameraLauncher.launch(uri)
+                    } else {
+                        // Request permission
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
                 }
             )
 
@@ -146,9 +156,9 @@ fun HomeScreenContent(
     image: Int? = null,
     updateConnectionStatus: () -> Unit,
     isNetworkAvailable: State<Boolean>,
-    multiplePhotoPickerLaunch: () -> Unit,
+    singlePhotoPickerLaunch: () -> Unit,
     paddingValuesfromPreview: PaddingValues? = null,
-
+    captureImageLaunch:() -> Unit
     ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -240,7 +250,7 @@ fun HomeScreenContent(
                             CoroutineScope(Dispatchers.Main).launch {
                                 delay(100)
                                 if (isNetworkAvailable.value) {
-                                    multiplePhotoPickerLaunch()
+                                    singlePhotoPickerLaunch()
                                 }
                             }
                         },
@@ -272,8 +282,7 @@ fun HomeScreenContent(
                                 delay(100)
 
                                 if (isNetworkAvailable.value) {
-                                    /*TODO*/
-
+                                    captureImageLaunch()
                                 }
                             }
 
@@ -316,23 +325,7 @@ fun HomeScreenContent(
     }
 }
 
-@Composable
-fun multiplePhotoPicker(
-    homeViewModel: HomeViewModel,
-    navigator: Navigator
-): ManagedActivityResultLauncher<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>> {
-    val multiplePhotoPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 3),
-        onResult = { uri ->
-            homeViewModel.setImageUri(uri)
-            val uriStrings = uri.map { it.toString() }
-            if (uri.isNotEmpty()) {
-                navigator.push(PlantDetails(uriStrings))
-            }
-        }
-    )
-    return multiplePhotoPicker
-}
+
 
 fun homeScreenImage(): Int {
     val imageList = listOf(
@@ -383,7 +376,8 @@ fun HomeScreenPreview() {
                     paddingValuesfromPreview = paddingValues,
                     updateConnectionStatus = { },
                     isNetworkAvailable = remember { mutableStateOf(true) },
-                    multiplePhotoPickerLaunch = {}
+                    singlePhotoPickerLaunch = {},
+                    captureImageLaunch = {}
                 )
             }
         }

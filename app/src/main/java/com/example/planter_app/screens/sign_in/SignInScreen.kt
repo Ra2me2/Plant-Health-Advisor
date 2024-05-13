@@ -1,4 +1,4 @@
-package com.example.planter_app.firebase_login.sign_in
+package com.example.planter_app.screens.sign_in
 
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -46,6 +46,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,6 +61,7 @@ import coil.size.Scale
 import coil.transform.CircleCropTransformation
 import com.example.planter_app.MyApplication
 import com.example.planter_app.R
+import com.example.planter_app.firebase_login.sign_in.GoogleAuthUiClient
 import com.example.planter_app.screens.home.HomeScreen
 import com.example.planter_app.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
@@ -264,12 +266,12 @@ fun SignInScreenContent(
                 )
             }
 
-
-
             Text(
+                modifier = Modifier.padding(top = 10.dp),
                 text = stringResource(id = R.string.app_name),
                 color = MaterialTheme.colorScheme.primary,
-                fontSize = MaterialTheme.typography.displaySmall.fontSize
+                fontSize = MaterialTheme.typography.displaySmall.fontSize,
+                fontWeight = FontWeight.SemiBold
             )
 
             if (loadingIcon.value) {
@@ -283,7 +285,7 @@ fun SignInScreenContent(
 
             Button(
                 modifier = Modifier
-                    .padding(top = 70.dp),
+                    .padding(top = 50.dp),
                 shape = RoundedCornerShape(35.dp),
                 contentPadding = PaddingValues(vertical = 20.dp, horizontal = 80.dp),
                 elevation = ButtonDefaults.buttonElevation(

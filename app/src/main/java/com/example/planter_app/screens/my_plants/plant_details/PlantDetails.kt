@@ -49,7 +49,7 @@ import com.example.planter_app.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 
 
-data class PlantDetails(val uri: List<String> = emptyList()) : Screen {
+data class PlantDetails(val uri: String) : Screen {
 
     @Composable
     override fun Content() {
@@ -74,7 +74,7 @@ data class PlantDetails(val uri: List<String> = emptyList()) : Screen {
 fun PlantDetailsContent(
     imageClicked: MutableState<Boolean>,
     context: Context,
-    uri: List<String>? = null
+    uri: String? = null
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -85,7 +85,7 @@ fun PlantDetailsContent(
         val painter = if (!uri.isNullOrEmpty()) {
             rememberAsyncImagePainter(
                 ImageRequest.Builder(context)
-                    .data(uri[0])
+                    .data(uri)
                     .apply(block = fun ImageRequest.Builder.() {
                         crossfade(800)
                         scale(scale = Scale.FIT)

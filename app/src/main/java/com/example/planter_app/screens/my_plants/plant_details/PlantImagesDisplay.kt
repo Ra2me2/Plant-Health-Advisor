@@ -47,7 +47,7 @@ import com.example.planter_app.appbar_and_navigation_drawer.AppBar
 import com.example.planter_app.ui.theme.Planter_appTheme
 
 @OptIn(ExperimentalFoundationApi::class)
-data class PlantImagesDisplay(val uri: List<String>) : Screen {
+data class PlantImagesDisplay(val uri: String) : Screen {
 
     @Composable
     override fun Content() {
@@ -55,8 +55,9 @@ data class PlantImagesDisplay(val uri: List<String>) : Screen {
 
         val pagerState = rememberPagerState(
             initialPage = 0,
-            initialPageOffsetFraction = 0.1f
-        ) { uri.size }
+            initialPageOffsetFraction = 0.1f,
+            pageCount = { 1 }
+        )
 
         val colorMatrix by remember { mutableStateOf(ColorMatrix()) }
 
@@ -83,8 +84,7 @@ fun PlantImagesDisplayContent(
     onClick: () -> Unit,
     pagerState: PagerState = rememberPagerState(pageCount = { 1 }), // Default to 1 page
     colorMatrix: ColorMatrix? = null, // Default empty ColorMatrix
-    uri: List<String>? = null,
-
+    uri: String? = null,
     ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -129,7 +129,7 @@ fun PlantImagesDisplayContent(
                 rememberAsyncImagePainter(
 
                     ImageRequest.Builder(LocalContext.current)
-                        .data(uri[index])
+                        .data(uri)
                         .apply(block = fun ImageRequest.Builder.() {
                             crossfade(800)
                             scale(scale = Scale.FIT)

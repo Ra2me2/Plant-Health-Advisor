@@ -16,17 +16,12 @@ class RoomViewModel(application: Application): AndroidViewModel(application) {
         readAllData = repository.readAllData
     }
 
-    fun addData(data: PlantTable) {
+    fun upsertData(data: PlantTable) {
         viewModelScope.launch {
-            repository.addData(data)
+            repository.upsertData(data)
         }
     }
 
-    fun updateData(data: PlantTable) {
-        viewModelScope.launch {
-            repository.updateData(data)
-        }
-    }
 
     fun deleteData(data: PlantTable) {
         viewModelScope.launch {

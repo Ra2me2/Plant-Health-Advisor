@@ -55,7 +55,7 @@ object MyPlantsScreen : Screen {
         MyPlantsScreenContent(
             paddingValues = PaddingValues(top = 0.dp)
         ) { imageUri ->
-            navigator.push(PlantDetails(listOf(imageUri)))
+            navigator.push(PlantDetails(imageUri))
         }
     }
 }
