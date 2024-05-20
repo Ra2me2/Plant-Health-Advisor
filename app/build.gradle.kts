@@ -2,8 +2,10 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.gms.google-services")
-
     id("com.google.devtools.ksp")
+
+    // to store secret keys
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 
@@ -42,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.11"
@@ -94,4 +97,9 @@ dependencies {
     annotationProcessor (libs.androidx.room.compiler)
     androidTestImplementation (libs.androidx.room.testing)
     ksp(libs.androidx.room.compiler)
+
+    // Retrofit
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.gson)
 }

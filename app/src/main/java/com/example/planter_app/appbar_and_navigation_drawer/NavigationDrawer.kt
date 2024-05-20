@@ -49,11 +49,11 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.example.planter_app.R
-import com.example.planter_app.screens.about.AboutScreen
-import com.example.planter_app.screens.home.HomeScreen
-import com.example.planter_app.screens.my_plants.MyPlantsScreen
-import com.example.planter_app.screens.settings.SettingsScreen
-import com.example.planter_app.screens.settings.SettingsViewModel
+import com.example.planter_app.ui.screens.about.AboutScreen
+import com.example.planter_app.ui.screens.home.HomeScreen
+import com.example.planter_app.ui.screens.my_plants.MyPlantsScreen
+import com.example.planter_app.ui.screens.settings.SettingsScreen
+import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -66,19 +66,23 @@ fun NavigationDrawer(
     navigator: Navigator,
 ) {
     val selectedNavItem = remember { mutableStateOf(Icons.Outlined.Home) }
-    selectedNavItem.value = when(SettingsViewModel.appBarTitle.value){
+    selectedNavItem.value = when (SettingsViewModel.appBarTitle.value) {
         stringResource(id = R.string.HOME_SCREEN_TITLE) -> Icons.Outlined.Home
         stringResource(id = R.string.MY_PLANTS_SCREEN_TITLE) -> Icons.Outlined.Eco
         stringResource(id = R.string.SETTINGS_SCREEN_TITLE) -> Icons.Outlined.Settings
         stringResource(id = R.string.ABOUT_SCREEN_TITLE) -> Icons.Outlined.Info
-        else -> {Icons.Outlined.Home}
+        else -> {
+            Icons.Outlined.Home
+        }
     }
 
     val localNavigator = LocalNavigator.currentOrThrow
     ModalNavigationDrawer(
         modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
         drawerState = drawerState,
-        gesturesEnabled = SettingsViewModel.appBarTitle.value != stringResource(id = R.string.SIGN_IN_SCREEN_TITLE),
+        gesturesEnabled =
+        SettingsViewModel.appBarTitle.value != stringResource(id = R.string.SIGN_IN_SCREEN_TITLE)
+                && SettingsViewModel.appBarTitle.value != stringResource(id = R.string.LOADING_SCREEN),
         drawerContent = {
             NavigationDrawerContent(
                 selectedNavItem,
@@ -213,7 +217,7 @@ fun NavigationDrawerContentPreview() {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
-        ){
+        ) {
             Scaffold()
             { paddingVales ->
                 Spacer(modifier = Modifier.padding(top = paddingVales.calculateTopPadding()))

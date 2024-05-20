@@ -17,7 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.example.planter_app.R
-import com.example.planter_app.screens.settings.SettingsViewModel
+import com.example.planter_app.ui.screens.my_plants.MyPlantsViewModel
+import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,18 +26,21 @@ import com.example.planter_app.ui.theme.Planter_appTheme
 fun AppBar(
     onNavigationIconClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
-    titleComingFromPreviews: String?= null
+    titleComingFromPreviews: String? = null
 ) {
 
     CenterAlignedTopAppBar(
         title = {
             Text(
-                text = titleComingFromPreviews?: SettingsViewModel.appBarTitle.value,
+                text = titleComingFromPreviews ?: SettingsViewModel.appBarTitle.value,
                 color = MaterialTheme.colorScheme.primary,
             )
         },
         navigationIcon = {
-            if (SettingsViewModel.appBarTitle.value != stringResource(id = R.string.SIGN_IN_SCREEN_TITLE)) {
+            if (SettingsViewModel.appBarTitle.value != stringResource(id = R.string.SIGN_IN_SCREEN_TITLE) && SettingsViewModel.appBarTitle.value != stringResource(
+                    id = R.string.LOADING_SCREEN
+                )
+            ) {
                 IconButton(onClick = { onNavigationIconClick() }) {
                     Icon(
                         imageVector = Icons.Default.Menu,
@@ -50,7 +54,10 @@ fun AppBar(
 
         actions = {
             // for any action bar item... maybe notifications in future
-            if (SettingsViewModel.appBarTitle.value != stringResource(id = R.string.SIGN_IN_SCREEN_TITLE)) {
+            if (SettingsViewModel.appBarTitle.value != stringResource(id = R.string.SIGN_IN_SCREEN_TITLE) && SettingsViewModel.appBarTitle.value != stringResource(
+                    id = R.string.LOADING_SCREEN
+                )
+            ) {
                 IconButton(
                     onClick = { /*TODO*/ }
                 ) {
@@ -61,9 +68,14 @@ fun AppBar(
                 }
             }
 
-            if (SettingsViewModel.appBarTitle.value == stringResource(id = R.string.PLANT_INFO_SCREEN_TITLE)){
+            if (SettingsViewModel.appBarTitle.value == stringResource(id = R.string.PLANT_INFO_SCREEN_TITLE) && SettingsViewModel.appBarTitle.value != stringResource(
+                    id = R.string.LOADING_SCREEN
+                )
+            ) {
                 IconButton(
-                    onClick = { /*TODO*/ }
+                    onClick = {
+                        MyPlantsViewModel.plantDeleteIcon.value = true
+                    }
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
@@ -74,7 +86,6 @@ fun AppBar(
         }
     )
 }
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)

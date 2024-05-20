@@ -1,4 +1,4 @@
-package com.example.planter_app.screens.sign_in
+package com.example.planter_app.ui.screens.sign_in
 
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -62,8 +62,8 @@ import coil.transform.CircleCropTransformation
 import com.example.planter_app.MyApplication
 import com.example.planter_app.R
 import com.example.planter_app.firebase_login.sign_in.GoogleAuthUiClient
-import com.example.planter_app.screens.home.HomeScreen
-import com.example.planter_app.screens.settings.SettingsViewModel
+import com.example.planter_app.ui.screens.home.HomeScreen
+import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.CoroutineScope
@@ -76,7 +76,6 @@ object SignInScreen : Screen {
 
     private val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
-            context = MyApplication.instance!!.applicationContext,
             oneTapClient = Identity.getSignInClient(MyApplication.instance!!.applicationContext)
         )
     }
@@ -133,74 +132,43 @@ object SignInScreen : Screen {
             }
         }
 
-        val pullToRefreshState = rememberPullToRefreshState()
-        val isRefreshing by settingsViewModel.isRefreshing.collectAsStateWithLifecycle()
-        val isNetworkAvailable = settingsViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
+        SignInScreenContent(
+            loadingIcon,
+            onClickSignInWithGoogle = {
+                settingsViewModel.updateConnectionStatus()
+                CoroutineScope(Dispatchers.Main).launch {
+//                    delay(100)
+                    if (SettingsViewModel.isNetworkAvailable.value) {
+                        viewModel.setLoadingIcon(loading = true)
 
-        Box(
-            modifier = Modifier.nestedScroll(pullToRefreshState.nestedScrollConnection)
+                        viewModel.viewModelScope.launch {
+                            val signInIntentSender = googleAuthUiClient.signIn()
+                            launcher.launch(
+                                IntentSenderRequest.Builder(
+                                    signInIntentSender ?: return@launch
+                                ).build()
+                            )
+                        }
+                    }
+                }
+            },
+            onClickSignAsGuest = {
+                settingsViewModel.updateConnectionStatus()
+                CoroutineScope(Dispatchers.Main).launch {
+//                    delay(100)
+                    if (SettingsViewModel.isNetworkAvailable.value) {
+                        viewModel.setLoadingIcon(loading = true)
+                        // Call the anonymous sign-in method
+                        viewModel.viewModelScope.launch {
+                            val signInResult =
+                                googleAuthUiClient.signInAnonymously()
+                            viewModel.onSignInResult(signInResult)
+                        }
+                    }
+                }
+            },
+            comingFromPreviews = false
         )
-        {
-            SignInScreenContent(
-                loadingIcon,
-                onClickSignInWithGoogle = {
-                    settingsViewModel.updateConnectionStatus()
-                    CoroutineScope(Dispatchers.Main).launch {
-                        delay(100)
-
-                        if (isNetworkAvailable.value) {
-                            viewModel.setLoadingIcon(loading = true)
-
-                            viewModel.viewModelScope.launch {
-                                val signInIntentSender = googleAuthUiClient.signIn()
-                                launcher.launch(
-                                    IntentSenderRequest.Builder(
-                                        signInIntentSender ?: return@launch
-                                    ).build()
-                                )
-                            }
-                        }
-                    }
-                },
-                isNetworkAvailable,
-                onClickSignAsGuest = {
-                    settingsViewModel.updateConnectionStatus()
-                    CoroutineScope(Dispatchers.Main).launch {
-                        delay(100)
-                        if (isNetworkAvailable.value) {
-                            viewModel.setLoadingIcon(loading = true)
-                            // Call the anonymous sign-in method
-                            viewModel.viewModelScope.launch {
-                                val signInResult =
-                                    googleAuthUiClient.signInAnonymously()
-                                viewModel.onSignInResult(signInResult)
-                            }
-                        }
-                    }
-                },
-                comingFromPreviews = false
-            )
-
-            if (pullToRefreshState.isRefreshing) {
-                LaunchedEffect(true) {
-                    settingsViewModel.updateRefresh()
-                }
-            }
-
-            LaunchedEffect(isRefreshing) {
-                if (isRefreshing) {
-                    pullToRefreshState.startRefresh()
-                } else {
-                    pullToRefreshState.endRefresh()
-                }
-            }
-
-            PullToRefreshContainer(
-                state = pullToRefreshState,
-                modifier = Modifier
-                    .align(Alignment.TopCenter),
-            )
-        }
     }
 }
 
@@ -209,9 +177,8 @@ object SignInScreen : Screen {
 fun SignInScreenContent(
     loadingIcon: State<Boolean>,
     onClickSignInWithGoogle: () -> Unit,
-    isNetworkAvailable: State<Boolean>,
     onClickSignAsGuest: () -> Unit,
-    comingFromPreviews : Boolean,
+    comingFromPreviews: Boolean,
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -232,7 +199,7 @@ fun SignInScreenContent(
     ) {
         item {
 
-            if (!comingFromPreviews){
+            if (!comingFromPreviews) {
                 val painter =
                     rememberAsyncImagePainter(
                         ImageRequest.Builder(LocalContext.current)
@@ -255,7 +222,7 @@ fun SignInScreenContent(
                         .size(width = 320.dp, height = 320.dp) // Fixed container size
                         .padding(top = 30.dp, bottom = 30.dp)
                 )
-            }else{
+            } else {
                 Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "image",
@@ -299,7 +266,7 @@ fun SignInScreenContent(
                 onClick = {
                     onClickSignInWithGoogle()
                 },
-                enabled = isNetworkAvailable.value
+                enabled = SettingsViewModel.isNetworkAvailable.value
             ) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -348,7 +315,7 @@ fun SignInScreenContent(
                 onClick = {
                     onClickSignAsGuest()
                 },
-                enabled = isNetworkAvailable.value
+                enabled = SettingsViewModel.isNetworkAvailable.value
             ) {
                 Text(text = stringResource(id = R.string.sign_in_as_a_guest))
             }
@@ -358,7 +325,7 @@ fun SignInScreenContent(
                     .fillMaxSize()
                     .padding(top = 15.dp)
             ) {
-                if (!isNetworkAvailable.value) {
+                if (!SettingsViewModel.isNetworkAvailable.value) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
                         color = MaterialTheme.colorScheme.error,
@@ -378,13 +345,12 @@ fun SignInScreenPreview() {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
-        ){
+        ) {
             Scaffold { paddingVales ->
                 Spacer(modifier = Modifier.padding(top = paddingVales.calculateTopPadding()))
                 SignInScreenContent(
                     loadingIcon = remember { mutableStateOf(false) },
                     onClickSignInWithGoogle = { },
-                    isNetworkAvailable = remember { mutableStateOf(true) },
                     onClickSignAsGuest = {},
                     comingFromPreviews = true,
                 )

@@ -1,4 +1,4 @@
-package com.example.planter_app.screens.about
+package com.example.planter_app.ui.screens.about
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import com.example.planter_app.R
 import com.example.planter_app.appbar_and_navigation_drawer.AppBar
-import com.example.planter_app.screens.settings.SettingsViewModel
+import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 
 object AboutScreen : Screen {

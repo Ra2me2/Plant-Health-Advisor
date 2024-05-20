@@ -1,4 +1,4 @@
-package com.example.planter_app.screens.home
+package com.example.planter_app.ui.screens.home
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -64,9 +64,9 @@ import com.example.planter_app.MyApplication
 import com.example.planter_app.ui.theme.Planter_appTheme
 import com.example.planter_app.R
 import com.example.planter_app.appbar_and_navigation_drawer.AppBar
-import com.example.planter_app.image_capture_n_picker.captureImageFromCamera
-import com.example.planter_app.image_capture_n_picker.singlePhotoPickerFromGallery
-import com.example.planter_app.screens.settings.SettingsViewModel
+import com.example.planter_app.ui.screens.settings.SettingsViewModel
+import com.example.planter_app.utilities.captureImageFromCamera
+import com.example.planter_app.utilities.singlePhotoPickerFromGallery
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -87,67 +87,41 @@ object HomeScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val settingsViewModel = viewModel<SettingsViewModel>()
 
-        val isNetworkAvailable = settingsViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
+//        val isNetworkAvailable = settingsViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
 
         val singlePhotoPicker = singlePhotoPickerFromGallery(
             navigator = navigator
         )
 
-        val (uri,permissionLauncher, cameraLauncher) = captureImageFromCamera(
+        val (uri, permissionLauncher, cameraLauncher) = captureImageFromCamera(
             navigator = navigator
         )
 
-        val pullToRefreshState = rememberPullToRefreshState()
-        val isRefreshing by settingsViewModel.isRefreshing.collectAsStateWithLifecycle()
 
-        Box(
-            modifier = Modifier.nestedScroll(pullToRefreshState.nestedScrollConnection)
-        )
-        {
-            HomeScreenContent(
-                homeScreenImage,
-                updateConnectionStatus = {
-                    settingsViewModel.updateConnectionStatus()
-                },
-                isNetworkAvailable,
-                singlePhotoPickerLaunch = {
-                    singlePhotoPicker.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        HomeScreenContent(
+            homeScreenImage,
+            updateConnectionStatus = {
+                settingsViewModel.updateConnectionStatus()
+            },
+            singlePhotoPickerLaunch = {
+                singlePhotoPicker.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            },
+            captureImageLaunch = {
+                val permissionCheckResult =
+                    ContextCompat.checkSelfPermission(
+                        MyApplication.instance!!.applicationContext,
+                        Manifest.permission.CAMERA
                     )
-                },
-                captureImageLaunch = {
-                    val permissionCheckResult =
-                        ContextCompat.checkSelfPermission(MyApplication.instance!!.applicationContext, Manifest.permission.CAMERA)
-                    if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
-                        cameraLauncher.launch(uri)
-                    } else {
-                        // Request permission
-                        permissionLauncher.launch(Manifest.permission.CAMERA)
-                    }
-                }
-            )
-
-            if (pullToRefreshState.isRefreshing) {
-                LaunchedEffect(true) {
-                    settingsViewModel.updateRefresh()
-                }
-            }
-
-            LaunchedEffect(isRefreshing) {
-                if (isRefreshing) {
-                    pullToRefreshState.startRefresh()
+                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
+                    cameraLauncher.launch(uri)
                 } else {
-                    pullToRefreshState.endRefresh()
+                    // Request permission
+                    permissionLauncher.launch(Manifest.permission.CAMERA)
                 }
             }
-
-            PullToRefreshContainer(
-                state = pullToRefreshState,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-            )
-
-        }
+        )
     }
 }
 
@@ -155,11 +129,10 @@ object HomeScreen : Screen {
 fun HomeScreenContent(
     image: Int? = null,
     updateConnectionStatus: () -> Unit,
-    isNetworkAvailable: State<Boolean>,
     singlePhotoPickerLaunch: () -> Unit,
     paddingValuesfromPreview: PaddingValues? = null,
-    captureImageLaunch:() -> Unit
-    ) {
+    captureImageLaunch: () -> Unit
+) {
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -236,7 +209,7 @@ fun HomeScreenContent(
             ) {
                 Text(
                     modifier = Modifier.padding(20.dp),
-                    text = stringResource(id = R.string.disease_detection)
+                    text = stringResource(id = R.string.photo_requirement)
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -248,8 +221,7 @@ fun HomeScreenContent(
                         onClick = {
                             updateConnectionStatus()
                             CoroutineScope(Dispatchers.Main).launch {
-                                delay(100)
-                                if (isNetworkAvailable.value) {
+                                if (SettingsViewModel.isNetworkAvailable.value) {
                                     singlePhotoPickerLaunch()
                                 }
                             }
@@ -258,7 +230,7 @@ fun HomeScreenContent(
                             defaultElevation = 2.dp,
                             pressedElevation = 5.dp
                         ),
-                        enabled = isNetworkAvailable.value
+                        enabled = SettingsViewModel.isNetworkAvailable.value
                     ) {
 
                         Row {
@@ -279,9 +251,7 @@ fun HomeScreenContent(
                         onClick = {
                             updateConnectionStatus()
                             CoroutineScope(Dispatchers.Main).launch {
-                                delay(100)
-
-                                if (isNetworkAvailable.value) {
+                                if (SettingsViewModel.isNetworkAvailable.value) {
                                     captureImageLaunch()
                                 }
                             }
@@ -291,7 +261,7 @@ fun HomeScreenContent(
                             defaultElevation = 2.dp,
                             pressedElevation = 5.dp
                         ),
-                        enabled = isNetworkAvailable.value
+                        enabled = SettingsViewModel.isNetworkAvailable.value
                     ) {
                         Row {
                             Icon(
@@ -313,7 +283,7 @@ fun HomeScreenContent(
                     .fillMaxSize()
                     .padding(top = 15.dp)
             ) {
-                if (!isNetworkAvailable.value) {
+                if (!SettingsViewModel.isNetworkAvailable.value) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
                         color = MaterialTheme.colorScheme.error,
@@ -324,7 +294,6 @@ fun HomeScreenContent(
         }
     }
 }
-
 
 
 fun homeScreenImage(): Int {
@@ -375,7 +344,6 @@ fun HomeScreenPreview() {
                 HomeScreenContent(
                     paddingValuesfromPreview = paddingValues,
                     updateConnectionStatus = { },
-                    isNetworkAvailable = remember { mutableStateOf(true) },
                     singlePhotoPickerLaunch = {},
                     captureImageLaunch = {}
                 )

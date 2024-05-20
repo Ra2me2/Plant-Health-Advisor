@@ -1,4 +1,4 @@
-package com.example.planter_app.screens.my_plants
+package com.example.planter_app.ui.screens.my_plants
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -40,9 +41,8 @@ import coil.request.ImageRequest
 import coil.size.Scale
 import com.example.planter_app.R
 import com.example.planter_app.appbar_and_navigation_drawer.AppBar
-import com.example.planter_app.screens.my_plants.plant_details.PlantDetails
-
-import com.example.planter_app.screens.settings.SettingsViewModel
+import com.example.planter_app.ui.screens.my_plants.plant_details.PlantDetails
+import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 
 object MyPlantsScreen : Screen {
@@ -53,10 +53,15 @@ object MyPlantsScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
 
         MyPlantsScreenContent(
-            paddingValues = PaddingValues(top = 0.dp)
-        ) { imageUri ->
-            navigator.push(PlantDetails(imageUri))
-        }
+            paddingValues = PaddingValues(top = 0.dp),
+            onClickCard = {image ->
+                navigator.push(PlantDetails(
+                    image.toUri(),
+                    comingFromMyPlants = true
+                ))
+            }
+        )
+
     }
 }
 
@@ -65,7 +70,8 @@ fun MyPlantsScreenContent(
     comingFromPreview: Boolean? = false, paddingValues: PaddingValues,
     onClickCard: (String) -> Unit
 ) {
-    val image1 = "https://cdn.pixabay.com/photo/2024/01/07/15/53/ai-generated-8493482_960_720.jpg"
+//    val image1 = "https://cdn.pixabay.com/photo/2024/01/07/15/53/ai-generated-8493482_960_720.jpg"
+    val image1 = "https://static.vecteezy.com/system/resources/thumbnails/022/963/918/small_2x/ai-generative-cute-cat-isolated-on-solid-background-photo.jpg"
 
     Box(
         modifier = Modifier.fillMaxSize()

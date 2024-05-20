@@ -1,4 +1,4 @@
-package com.example.planter_app.screens.sign_in
+package com.example.planter_app.ui.screens.sign_in
 
 import androidx.lifecycle.ViewModel
 import com.example.planter_app.firebase_login.sign_in.SignInResult

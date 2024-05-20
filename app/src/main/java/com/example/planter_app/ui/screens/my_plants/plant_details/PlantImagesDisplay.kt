@@ -1,4 +1,4 @@
-package com.example.planter_app.screens.my_plants.plant_details
+package com.example.planter_app.ui.screens.my_plants.plant_details
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -36,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -65,7 +66,7 @@ data class PlantImagesDisplay(val uri: String) : Screen {
             onClick = {
                 navigator.popUntil { screen ->
                     if (screen is PlantDetails) {
-                        screen.uri == uri
+                        screen.uri == uri.toUri()
                     } else {
                         false
                     }

@@ -1,9 +1,9 @@
-package com.example.planter_app.screens.settings
+package com.example.planter_app.ui.screens.settings
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.planter_app.ConnectivityCheck
+import com.example.planter_app.utilities.ConnectivityCheck
 import com.example.planter_app.MyApplication
 import com.example.planter_app.firebase_login.sign_in.GoogleAuthUiClient
 import com.google.android.gms.auth.api.identity.Identity
@@ -20,15 +20,16 @@ class SettingsViewModel:ViewModel(){
 
         val darkMode = mutableStateOf(false)
         val dynamicTheme = mutableStateOf(false)
+
+        val isNetworkAvailable = mutableStateOf(true)
     }
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    private val _isNetworkAvailable = MutableStateFlow(ConnectivityCheck.checkNetworkAvailability())
-    val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
     fun updateConnectionStatus(){
-        _isNetworkAvailable.value = ConnectivityCheck.checkNetworkAvailability()
+    isNetworkAvailable.value = ConnectivityCheck.checkNetworkAvailability()
     }
 
     fun updateRefresh() {
@@ -44,7 +45,6 @@ class SettingsViewModel:ViewModel(){
     fun isUserLoggedIn(): Boolean{
         val googleAuthUiClient by lazy {
             GoogleAuthUiClient(
-                context = MyApplication.instance!!.applicationContext,
                 oneTapClient = Identity.getSignInClient(MyApplication.instance!!.applicationContext)
             )
         }

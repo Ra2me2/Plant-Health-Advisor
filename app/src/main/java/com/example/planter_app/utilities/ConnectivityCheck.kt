@@ -1,13 +1,10 @@
-package com.example.planter_app
+package com.example.planter_app.utilities
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.Build
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import com.example.planter_app.MyApplication
 
 object ConnectivityCheck {
     fun checkNetworkAvailability(): Boolean {

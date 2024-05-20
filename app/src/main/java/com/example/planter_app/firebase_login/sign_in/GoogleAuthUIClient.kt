@@ -1,22 +1,17 @@
 package com.example.planter_app.firebase_login.sign_in
 
-import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
-import android.os.Parcelable
-import com.example.planter_app.R
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.tasks.await
-import java.io.Serializable
 import kotlin.coroutines.cancellation.CancellationException
 
 
 class GoogleAuthUiClient(
-    private val context: Context,
     private val oneTapClient: SignInClient
 ){
     private val auth = Firebase.auth
@@ -66,7 +61,7 @@ class GoogleAuthUiClient(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
                     .setSupported(true)
                     .setFilterByAuthorizedAccounts(false) //if true, it will only display the accounts the user is signed in, else all the accounts
-                    .setServerClientId(context.getString(R.string.web_client_id))
+                    .setServerClientId(com.example.planter_app.BuildConfig.firebaseWebclientId)
                     .build()
             )
             .setAutoSelectEnabled(true) // if there is only 1 google account, automatically sign in without displaying the account

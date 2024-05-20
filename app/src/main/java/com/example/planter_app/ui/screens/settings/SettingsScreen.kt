@@ -1,4 +1,4 @@
-package com.example.planter_app.screens.settings
+package com.example.planter_app.ui.screens.settings
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -52,9 +52,9 @@ import com.example.planter_app.MyApplication
 import com.example.planter_app.R
 import com.example.planter_app.firebase_login.sign_in.GoogleAuthUiClient
 import com.example.planter_app.appbar_and_navigation_drawer.AppBar
-import com.example.planter_app.screens.sign_in.SignInScreen
-import com.example.planter_app.screens.sign_in.SignInViewModel
 import com.example.planter_app.shared_preferences.ThemePreferences
+import com.example.planter_app.ui.screens.sign_in.SignInScreen
+import com.example.planter_app.ui.screens.sign_in.SignInViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.launch
@@ -63,7 +63,6 @@ import kotlinx.coroutines.launch
 object SettingsScreen : Screen {
     private val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
-            context = MyApplication.instance!!.applicationContext,
             oneTapClient = Identity.getSignInClient(MyApplication.instance!!.applicationContext)
         )
     }
