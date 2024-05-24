@@ -87,8 +87,6 @@ object HomeScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val settingsViewModel = viewModel<SettingsViewModel>()
 
-//        val isNetworkAvailable = settingsViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
-
         val singlePhotoPicker = singlePhotoPickerFromGallery(
             navigator = navigator
         )

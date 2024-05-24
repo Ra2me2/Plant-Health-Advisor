@@ -9,14 +9,16 @@ import kotlinx.coroutines.flow.asStateFlow
 class MyPlantsViewModel:ViewModel() {
 
     companion object{
-        var plantDeleteIcon = mutableStateOf(false)
+        var triggerPlantDeleteBottomSheet = mutableStateOf(false)
+        var displayPlantDeleteBottomSheet = mutableStateOf(false)
     }
 
-    private val _imageClicked = MutableStateFlow(false)
-    val imageClicked: StateFlow<Boolean> = _imageClicked.asStateFlow()
 
-    fun setImageClicked(boolean: Boolean){
-        _imageClicked.value = boolean
+    private val _isImageExpanded = MutableStateFlow(false)
+    val isImageExpanded : StateFlow<Boolean> = _isImageExpanded.asStateFlow()
+
+    fun setIsImageExpanded(boolean: Boolean){
+        _isImageExpanded.value = boolean
     }
 
 
@@ -27,5 +29,25 @@ class MyPlantsViewModel:ViewModel() {
         _plantNetApiResponse.value = string
     }
 
+    private val _mlModelApiResponseResult = MutableStateFlow<String?>(null)
+    val mlModelApiResponseResult: StateFlow<String?> = _mlModelApiResponseResult.asStateFlow()
+
+    fun setMlModelApiResponseResult(string: String){
+        _mlModelApiResponseResult.value = string
+    }
+
+    private val _mlModelApiResponseAdvice = MutableStateFlow<String?>(null)
+    val mlModelApiResponseAdvice: StateFlow<String?> = _mlModelApiResponseAdvice.asStateFlow()
+
+    fun setMlModelApiResponseAdvice(string: String){
+        _mlModelApiResponseAdvice.value = string
+    }
+
+    private val _mlModelApiResponseError = MutableStateFlow<String?>(null)
+    val mlModelApiResponseError: StateFlow<String?> = _mlModelApiResponseError.asStateFlow()
+
+    fun setMlModelApiResponseError(string: String){
+        _mlModelApiResponseError.value = string
+    }
 
 }

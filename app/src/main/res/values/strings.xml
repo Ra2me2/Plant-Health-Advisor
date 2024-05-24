@@ -39,7 +39,7 @@
 
     <!-- Plant Details Screen -->
     <string name="plant_description">Plant Description</string>
-    <string name="disease_name">Disease Name</string>
+    <string name="disease">Disease</string>
     <string name="treatment">Treatment</string>
     <string name="plant_not_detected">Plant not detected</string>
 

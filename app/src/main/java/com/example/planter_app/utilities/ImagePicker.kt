@@ -22,11 +22,10 @@ fun singlePhotoPickerFromGallery(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             if (uri!=null) {
-                Log.i("TAG", "singlePhotoPickerFromGallery: $uri")
                 val filePathUri = getRealPathFromURI(uri)
 
                 filePathUri?.let {
-                    navigator.push(PlantDetails(filePathUri.toUri()))
+                    navigator.push(PlantDetails(filePathUri))
                 }
             }
         }

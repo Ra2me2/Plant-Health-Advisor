@@ -56,7 +56,7 @@ object MyPlantsScreen : Screen {
             paddingValues = PaddingValues(top = 0.dp),
             onClickCard = {image ->
                 navigator.push(PlantDetails(
-                    image.toUri(),
+                    image,
                     comingFromMyPlants = true
                 ))
             }
@@ -70,8 +70,7 @@ fun MyPlantsScreenContent(
     comingFromPreview: Boolean? = false, paddingValues: PaddingValues,
     onClickCard: (String) -> Unit
 ) {
-//    val image1 = "https://cdn.pixabay.com/photo/2024/01/07/15/53/ai-generated-8493482_960_720.jpg"
-    val image1 = "https://static.vecteezy.com/system/resources/thumbnails/022/963/918/small_2x/ai-generative-cute-cat-isolated-on-solid-background-photo.jpg"
+    val image1 = "https://cdn.pixabay.com/photo/2024/01/07/15/53/ai-generated-8493482_960_720.jpg"
 
     Box(
         modifier = Modifier.fillMaxSize()

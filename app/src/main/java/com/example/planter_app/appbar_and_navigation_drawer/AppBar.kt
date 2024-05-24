@@ -54,27 +54,27 @@ fun AppBar(
 
         actions = {
             // for any action bar item... maybe notifications in future
-            if (SettingsViewModel.appBarTitle.value != stringResource(id = R.string.SIGN_IN_SCREEN_TITLE) && SettingsViewModel.appBarTitle.value != stringResource(
-                    id = R.string.LOADING_SCREEN
-                )
-            ) {
-                IconButton(
-                    onClick = { /*TODO*/ }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.NotificationsNone,
-                        contentDescription = "NotificationsNone"
-                    )
-                }
-            }
+//            if (SettingsViewModel.appBarTitle.value != stringResource(id = R.string.SIGN_IN_SCREEN_TITLE) && SettingsViewModel.appBarTitle.value != stringResource(
+//                    id = R.string.LOADING_SCREEN
+//                )
+//            ) {
+//                IconButton(
+//                    onClick = { /*TODO*/ }
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.NotificationsNone,
+//                        contentDescription = "NotificationsNone"
+//                    )
+//                }
+//            }
 
-            if (SettingsViewModel.appBarTitle.value == stringResource(id = R.string.PLANT_INFO_SCREEN_TITLE) && SettingsViewModel.appBarTitle.value != stringResource(
-                    id = R.string.LOADING_SCREEN
+            if (MyPlantsViewModel.displayPlantDeleteBottomSheet.value && SettingsViewModel.appBarTitle.value == stringResource(
+                    id = R.string.PLANT_INFO_SCREEN_TITLE
                 )
             ) {
                 IconButton(
                     onClick = {
-                        MyPlantsViewModel.plantDeleteIcon.value = true
+                        MyPlantsViewModel.triggerPlantDeleteBottomSheet.value = true
                     }
                 ) {
                     Icon(

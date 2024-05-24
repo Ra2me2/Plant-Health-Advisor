@@ -37,14 +37,11 @@ fun captureImageFromCamera(navigator: Navigator): Triple<Uri, ManagedActivityRes
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicture())
         { isTaken ->
             if (isTaken) {
-                Log.i("TAG", "captureImageFromCamera uri: $uri")
-
                 // Save Uri to the gallery and get the file path
                 val photoFilePathUri = saveUriToGallery(uri, context)
 
                 photoFilePathUri?.let {
-                    Log.i("TAG", "Saved photo to gallery path: $it")
-                    navigator.push(PlantDetails( photoFilePathUri.toUri() ))
+                    navigator.push(PlantDetails( photoFilePathUri))
                 }
             }
         }

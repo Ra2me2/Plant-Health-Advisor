@@ -1,10 +1,16 @@
 package com.example.planter_app.retrofit
 
+import android.util.Base64
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.planter_app.BuildConfig
+import com.example.planter_app.retrofit.ml_model_api.ClassificationRequestItem
+import com.example.planter_app.retrofit.ml_model_api.MLModelRetrofitInstance
+import com.example.planter_app.retrofit.ml_model_api.MLModelRetrofitInstance.mlModelApiService
 import com.example.planter_app.retrofit.plant_net_api.PlantNetRetrofitInstance
 import com.example.planter_app.retrofit.plant_net_api.Root
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,8 +24,15 @@ import java.io.File
 class RetrofitViewModel() : ViewModel() {
     private val apiKey = BuildConfig.plantNetApikey
 
+    private val _apiResponseLoading = MutableStateFlow(false)
+    val apiResponseLoading: StateFlow<Boolean> = _apiResponseLoading.asStateFlow()
+
+    fun setApiResponseLoading(boolean: Boolean){
+        _apiResponseLoading.value = boolean
+    }
+
     fun plantNetUploadImage(filePath: String, onSuccess: (String) -> Unit, onError: (String) -> Unit) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val file = File(filePath)
             try {
                 val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
@@ -55,15 +68,45 @@ class RetrofitViewModel() : ViewModel() {
                 }
             } catch (e: Exception) {
                 onError(e.message ?: "Unknown error")
-            } finally {
-
             }
         }
     }
 
 
-    fun MLModelUploadImage(){
-        // once the api is hosted...
+    fun mLModelUploadImage(imagePath: String, onSuccessResult: (String) -> Unit,onSuccessAdvice: (String) -> Unit, onError: (String) -> Unit){
+        encodeImageFileToBase64(imagePath) { base64Image ->
+            val request = ClassificationRequestItem(base64Image)
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val response = mlModelApiService.classifyImage(request)
+                    if (response.isSuccessful) {
+                        val result = response.body()?.result
+                        val advice = response.body()?.advice
+
+                        if (result != null && advice!=null) {
+                            onSuccessResult(result)
+                            onSuccessAdvice(advice)
+                        } else {
+                            onError("Unknown error: Response body is null")
+                        }
+                    } else {
+                        onError("Error: ${response.code()} - ${response.message()}")
+                    }
+                } catch (e: Exception) {
+                    onError(e.message ?: "Unknown error")
+                }
+
+            }
+        }
+    }
+
+    private fun encodeImageFileToBase64(imagePath: String, onEncoded: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.Default) {
+            val file = File(imagePath)
+            val bytes = file.readBytes()
+            val encodedString = Base64.encodeToString(bytes, Base64.DEFAULT)
+            onEncoded(encodedString) // Call the callback with the encoded string
+        }
     }
 
 }

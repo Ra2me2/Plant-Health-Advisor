@@ -6,23 +6,28 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object MLModelRetrofitInstance {
-    private const val BASE_URL = ""
+    private const val BASE_URL = "https://plant-health-advisor.onrender.com"
 
-    fun create(apiKey: String): PlantNetApiService {
-        val httpClient = OkHttpClient.Builder().addInterceptor { chain ->
-            val original = chain.request()
-            val request = original.newBuilder()
-                .header("X-Api-Key", apiKey)
-                .method(original.method, original.body)
-                .build()
-            chain.proceed(request)
+    private val httpClient by lazy {
+        OkHttpClient.Builder().apply {
+
+            addInterceptor { chain ->
+                val original = chain.request()
+                val request = original.newBuilder()
+                    .method(original.method, original.body)
+                    .build()
+                chain.proceed(request)
+            }
         }.build()
+    }
 
-        return Retrofit.Builder()
+    // Create the Retrofit instance using lazy initialization
+    val mlModelApiService: MLModelApiService by lazy {
+        Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(httpClient)
             .build()
-            .create(PlantNetApiService::class.java)
+            .create(MLModelApiService::class.java)
     }
 }

@@ -1,7 +1,9 @@
 package com.example.planter_app.ui.screens.my_plants.plant_details
 
 import android.content.Context
-import android.net.Uri
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -63,11 +65,10 @@ import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-data class PlantDetails(val uri: Uri, val comingFromMyPlants: Boolean = false) : Screen {
+data class PlantDetails(val uri: String, val comingFromMyPlants: Boolean = false) : Screen {
 
     @Composable
     override fun Content() {
@@ -78,29 +79,20 @@ data class PlantDetails(val uri: Uri, val comingFromMyPlants: Boolean = false) :
         val myPlantsViewModel = viewModel<MyPlantsViewModel>()
         val settingsViewModel = viewModel<SettingsViewModel>()
 
+        val apiLoading =
+            retrofitViewModel.apiResponseLoading.collectAsStateWithLifecycle()
 
-        val imageClicked = myPlantsViewModel.imageClicked.collectAsStateWithLifecycle()
+
+        val isImageExpanded  = myPlantsViewModel.isImageExpanded.collectAsStateWithLifecycle()
         val plantNetApiResponse =
             myPlantsViewModel.plantNetApiResponse.collectAsStateWithLifecycle()
+        val mlModelApiResponseAdvice =
+            myPlantsViewModel.mlModelApiResponseAdvice.collectAsStateWithLifecycle()
+        val mlModelApiResponseResult =
+            myPlantsViewModel.mlModelApiResponseResult.collectAsStateWithLifecycle()
 
-        if (imageClicked.value) {
-            navigator.push(PlantImagesDisplay(uri.toString()))
-            myPlantsViewModel.setImageClicked(false)
-        }
 
-        // calling plantNetAPI, getting response
-        LaunchedEffect(Unit) {
-            retrofitViewModel.plantNetUploadImage(
-                uri.toString(),
-                onSuccess = {
-                    myPlantsViewModel.setPlantNetApiResponse(it)
-                },
-                onError = {
-                    myPlantsViewModel.setPlantNetApiResponse(it)
-                }
-            )
-        }
-        if (MyPlantsViewModel.plantDeleteIcon.value) {
+        if (MyPlantsViewModel.triggerPlantDeleteBottomSheet.value) {
             DeletePlant(
                 updateConnectionStatus = {
                     settingsViewModel.updateConnectionStatus()
@@ -109,26 +101,61 @@ data class PlantDetails(val uri: Uri, val comingFromMyPlants: Boolean = false) :
         }
 
         if (comingFromMyPlants) {
+            MyPlantsViewModel.displayPlantDeleteBottomSheet.value = true
             PlantDetailsContent(
-                onImageClick = {
-                    myPlantsViewModel.setImageClicked(it)
-                },
-                context, uri.toString()
+                isImageExpanded.value,
+                onImageClick = { myPlantsViewModel.setIsImageExpanded(!isImageExpanded.value) },
+                context,
+                uri,
+                result = "from firebase",
+                advice = "from firebase",
             )
-        } else {
+        }
+        else {
+                // calling plantNetAPI, MLModelAPI getting response
+                LaunchedEffect(Unit) {
+                    retrofitViewModel.setApiResponseLoading(true)
+                    retrofitViewModel.plantNetUploadImage(
+                        uri,
+                        onSuccess = {
+                            myPlantsViewModel.setPlantNetApiResponse(it)
+                            // calling MLModelAPI only if we get a response from PlantNetAPI (avoid API calls in case of none plants)
+                            retrofitViewModel.mLModelUploadImage(
+                                uri,
+                                onSuccessResult = {
+                                    retrofitViewModel.setApiResponseLoading(false)
+                                    myPlantsViewModel.setMlModelApiResponseResult(it)
+                                },
+                                onSuccessAdvice = {
+                                    retrofitViewModel.setApiResponseLoading(false)
+                                    myPlantsViewModel.setMlModelApiResponseAdvice(it)
+                                },
+                                onError = {
+//                    myPlantsViewModel.setMlModelApiResponseError(it)
+                                }
+                            )
+                        },
+                        onError = {
+                            retrofitViewModel.setApiResponseLoading(false)
+                            myPlantsViewModel.setPlantNetApiResponse(it)
+                        }
+                    )
+                }
+            MyPlantsViewModel.displayPlantDeleteBottomSheet.value = false
+
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                if (plantNetApiResponse.value.isNullOrBlank()) {
-                    SettingsViewModel.appBarTitle.value =
-                        stringResource(id = R.string.LOADING_SCREEN)
-                    CircularProgressIndicator()
 
-                } else {
+                if (apiLoading.value){
+                    SettingsViewModel.appBarTitle.value = stringResource(id = R.string.LOADING_SCREEN)
+                    CircularProgressIndicator()
+                }
+                else {
                     if (plantNetApiResponse.value == "404") {
-                        BottomSheet(
+                        ErrorBottomSheet(
                             sheetOpen = true,
                             backToHomeScreen = {
                                 navigator.replace(HomeScreen)
@@ -136,10 +163,12 @@ data class PlantDetails(val uri: Uri, val comingFromMyPlants: Boolean = false) :
                         )
                     } else {
                         PlantDetailsContent(
-                            onImageClick = {
-                                myPlantsViewModel.setImageClicked(it)
-                            },
-                            context, uri.toString()
+                            isImageExpanded = isImageExpanded.value,
+                            onImageClick = { myPlantsViewModel.setIsImageExpanded(!isImageExpanded.value) },
+                            context,
+                            uri,
+                            result = mlModelApiResponseResult.value,
+                            advice = mlModelApiResponseAdvice.value
                         )
                     }
                 }
@@ -150,9 +179,12 @@ data class PlantDetails(val uri: Uri, val comingFromMyPlants: Boolean = false) :
 
 @Composable
 fun PlantDetailsContent(
-    onImageClick: (Boolean) -> Unit,
+    isImageExpanded: Boolean,
+    onImageClick: () -> Unit,
     context: Context,
-    uri: String? = null
+    uri: String? = null,
+    result: String?,
+    advice: String?,
 ) {
     SettingsViewModel.appBarTitle.value = stringResource(id = R.string.PLANT_INFO_SCREEN_TITLE)
 
@@ -162,6 +194,15 @@ fun PlantDetailsContent(
         horizontalAlignment = Alignment.Start
     ) {
 
+        val height by animateDpAsState(
+            targetValue = if (isImageExpanded) 500.dp else 250.dp,
+            animationSpec = tween(
+                durationMillis = 500,
+                easing = LinearOutSlowInEasing
+            ), label = ""
+        )
+        val contentScale = if (isImageExpanded) ContentScale.Fit else ContentScale.FillWidth
+
         val painter = if (!uri.isNullOrEmpty()) {
             rememberAsyncImagePainter(
                 ImageRequest.Builder(context)
@@ -170,7 +211,7 @@ fun PlantDetailsContent(
                         crossfade(800)
                         scale(scale = Scale.FIT)
                     }).build(),
-                //                    error = painterResource(),
+                // error = painterResource(),
             )
         } else {
             painterResource(id = R.drawable.tree_robots_1)
@@ -181,12 +222,12 @@ fun PlantDetailsContent(
             contentDescription = "image",
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
+                .height(height)
                 .clip(RoundedCornerShape(bottomEnd = 70.dp, topStart = 70.dp))
                 .clickable {
-                    onImageClick(true)
+                    onImageClick()
                 },
-            contentScale = ContentScale.FillWidth,
+            contentScale = contentScale,
         )
 
         Box(
@@ -221,39 +262,13 @@ fun PlantDetailsContent(
                     ) {
                         Text(
                             modifier = Modifier.padding(20.dp),
-                            text = "${stringResource(id = R.string.plant_description)}:  ",
-                            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                            style = TextStyle.Default.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
-                            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
-                            textAlign = TextAlign.Justify,
-                        )
-
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        ),
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = 5.dp
-                        )
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(20.dp),
-                            text = "${stringResource(id = R.string.disease_name)}:  ",
+                            text = "${stringResource(id = R.string.disease)}:  ",
                             fontSize = MaterialTheme.typography.titleMedium.fontSize,
                             style = TextStyle.Default.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
                             modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-                            text = "Disease Type / Not detected",
+                            text = result?:"Result Not Found",
                         )
                     }
                     Card(
@@ -277,17 +292,7 @@ fun PlantDetailsContent(
 
                         Text(
                             modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
-                            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
-                            textAlign = TextAlign.Justify,
-                        )
-                        Text(
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
-                            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
-                            textAlign = TextAlign.Justify,
-                        )
-                        Text(
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
-                            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. Suspendisse potenti nullam ac tortor vitae. Pulvinar mattis nunc sed blandit liberovolutpat. Duis \n",
+                            text = advice?:"Advice Not Found",
                             textAlign = TextAlign.Justify,
                         )
                     }
@@ -299,7 +304,7 @@ fun PlantDetailsContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheet(
+fun ErrorBottomSheet(
     sheetOpen: Boolean = false,
     backToHomeScreen: () -> Unit
 ) {
@@ -362,7 +367,7 @@ fun DeletePlant(
 ) {
     val sheetState = rememberModalBottomSheetState()
     var isSheetOpen by remember {
-        mutableStateOf(MyPlantsViewModel.plantDeleteIcon.value)
+        mutableStateOf(MyPlantsViewModel.triggerPlantDeleteBottomSheet.value)
     }
 
     if (isSheetOpen) {
@@ -370,7 +375,7 @@ fun DeletePlant(
             sheetState = sheetState,
             onDismissRequest = {
                 isSheetOpen = false
-                MyPlantsViewModel.plantDeleteIcon.value = false
+                MyPlantsViewModel.triggerPlantDeleteBottomSheet.value = false
             }
         )
         {
@@ -409,6 +414,10 @@ fun DeletePlant(
                                 CoroutineScope(Dispatchers.Main).launch {
                                     if (SettingsViewModel.isNetworkAvailable.value) {
                                         /* TODO() once firebase database is setup*/
+//                                        isSheetOpen = false
+                                        MyPlantsViewModel.triggerPlantDeleteBottomSheet.value =
+                                            false
+
                                     }
                                 }
                             },
@@ -428,6 +437,10 @@ fun DeletePlant(
                                 CoroutineScope(Dispatchers.Main).launch {
                                     if (SettingsViewModel.isNetworkAvailable.value) {
                                         /* TODO() once firebase database is setup*/
+
+                                        MyPlantsViewModel.triggerPlantDeleteBottomSheet.value =
+                                            false
+
                                     }
                                 }
                             },
@@ -473,8 +486,11 @@ fun PlantDetailsPreview() {
             ) { paddingVales ->
                 Spacer(modifier = Modifier.padding(top = paddingVales.calculateTopPadding()))
                 PlantDetailsContent(
+                    isImageExpanded = true,
                     onImageClick = { },
-                    context = LocalContext.current
+                    context = LocalContext.current,
+                    result = "Result",
+                    advice = "Advice",
                 )
             }
         }
