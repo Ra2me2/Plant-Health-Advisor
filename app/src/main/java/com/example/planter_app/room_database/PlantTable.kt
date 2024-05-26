@@ -9,6 +9,6 @@ data class PlantTable(
     val id: Int,
 
     val dateAndTime: String?=null,
-    val diseaseName: String?=null,
-    val treatment: String?=null,
+    val result: String?=null,
+    val advice: String?=null,
 )

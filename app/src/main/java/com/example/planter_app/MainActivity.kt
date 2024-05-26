@@ -1,6 +1,7 @@
 package com.example.planter_app
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -24,12 +25,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.Navigator
 import com.example.planter_app.ui.theme.Planter_appTheme
-import com.example.planter_app.appbar_and_navigation_drawer.AppBar
-import com.example.planter_app.appbar_and_navigation_drawer.NavigationDrawer
 import com.example.planter_app.shared_preferences.ThemePreferences
+import com.example.planter_app.ui.appbar_and_navigation_drawer.AppBar
+import com.example.planter_app.ui.appbar_and_navigation_drawer.NavigationDrawer
 import com.example.planter_app.ui.screens.home.HomeScreen
 import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.screens.sign_in.SignInScreen
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 
 
@@ -37,6 +39,13 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+//        FirebaseMessaging.getInstance().token
+//            .addOnSuccessListener(this@MainActivity) { instanceIdResult ->
+//                val updatedToken: String = instanceIdResult
+//                Log.i("FCMToken", updatedToken)
+//            }
+
         setContent {
             val scope = rememberCoroutineScope()
 

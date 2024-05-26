@@ -1,4 +1,4 @@
-package com.example.planter_app.appbar_and_navigation_drawer
+package com.example.planter_app.ui.appbar_and_navigation_drawer
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column

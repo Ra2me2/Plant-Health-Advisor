@@ -32,18 +32,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -51,7 +43,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -61,15 +52,16 @@ import coil.request.ImageRequest
 import coil.size.Scale
 import coil.transform.CircleCropTransformation
 import com.example.planter_app.MyApplication
+import com.example.planter_app.push_notifications.MyNotification
+import com.example.planter_app.push_notifications.NotificationUtils
 import com.example.planter_app.ui.theme.Planter_appTheme
 import com.example.planter_app.R
-import com.example.planter_app.appbar_and_navigation_drawer.AppBar
+import com.example.planter_app.ui.appbar_and_navigation_drawer.AppBar
 import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.utilities.captureImageFromCamera
 import com.example.planter_app.utilities.singlePhotoPickerFromGallery
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 

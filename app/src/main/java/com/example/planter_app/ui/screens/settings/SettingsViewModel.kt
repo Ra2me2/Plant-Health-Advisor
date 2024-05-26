@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.planter_app.utilities.ConnectivityCheck
 import com.example.planter_app.MyApplication
 import com.example.planter_app.firebase_login.sign_in.GoogleAuthUiClient
+import com.example.planter_app.push_notifications.NotificationUtils
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ class SettingsViewModel:ViewModel(){
         val dynamicTheme = mutableStateOf(false)
 
         val isNetworkAvailable = mutableStateOf(true)
+        val areNotificationsEnabled = mutableStateOf(false)
     }
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -50,6 +52,13 @@ class SettingsViewModel:ViewModel(){
         }
         return googleAuthUiClient.getSignedInUser() != null
     }
+
+
+//    fun setNotificationStatus() {
+//        val notificationUtils = NotificationUtils()
+//        areNotificationsEnabled.value = notificationUtils.areNotificationsEnabled()
+//        notificationUtils.promptForNotificationPermission()
+//    }
 
 
 }

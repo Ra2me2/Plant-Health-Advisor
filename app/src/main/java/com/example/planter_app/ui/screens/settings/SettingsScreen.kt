@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
@@ -51,10 +52,10 @@ import coil.compose.AsyncImage
 import com.example.planter_app.MyApplication
 import com.example.planter_app.R
 import com.example.planter_app.firebase_login.sign_in.GoogleAuthUiClient
-import com.example.planter_app.appbar_and_navigation_drawer.AppBar
+import com.example.planter_app.push_notifications.NotificationUtils
 import com.example.planter_app.shared_preferences.ThemePreferences
+import com.example.planter_app.ui.appbar_and_navigation_drawer.AppBar
 import com.example.planter_app.ui.screens.sign_in.SignInScreen
-import com.example.planter_app.ui.screens.sign_in.SignInViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.launch
@@ -75,8 +76,8 @@ object SettingsScreen : Screen {
         SettingsViewModel.appBarTitle.value = stringResource(id = R.string.SETTINGS_SCREEN_TITLE)
 
         val navigator = LocalNavigator.currentOrThrow
-        val signInScreenViewModel = viewModel<SignInViewModel>()
         val settingsViewModel = viewModel<SettingsViewModel>()
+        val notificationUtils = NotificationUtils()
 
         val profilePicture = if (googleAuthUiClient.getSignedInUser()?.profilePictureURL != null) {
             googleAuthUiClient.getSignedInUser()?.profilePictureURL
@@ -107,12 +108,17 @@ object SettingsScreen : Screen {
             noSignedInUser = {
                 googleAuthUiClient.getSignedInUser()?.username == null
             },
-            onClickToggle = {
+            onClickToggleTheme = {
                 val themePreferences = ThemePreferences(MyApplication.instance!!.applicationContext)
                 themePreferences.saveTheme(
                     darkTheme = SettingsViewModel.darkMode.value,
                     dynamicTheme = SettingsViewModel.dynamicTheme.value
                 )
+            },
+            areNotificationsEnabled = SettingsViewModel.areNotificationsEnabled.value,
+            onClickToggleNotifications = {
+                SettingsViewModel.areNotificationsEnabled.value = notificationUtils.areNotificationsEnabled()
+                notificationUtils.promptForNotificationPermission()
             }
         )
     }
@@ -126,7 +132,9 @@ fun SettingsScreenContent(
     onClickSignOut: () -> Unit,
     noSignedInUser: () -> Boolean,
     paddingValesFromPreview: PaddingValues? = null,
-    onClickToggle: () -> Unit
+    onClickToggleTheme: () -> Unit,
+    areNotificationsEnabled: Boolean,
+    onClickToggleNotifications:() ->Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -199,32 +207,77 @@ fun SettingsScreenContent(
                     )
                 ) {
                     Row(
-                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp),
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         SwitchSettings(
                             text = stringResource(id = R.string.dark_mode),
                             setting = SettingsScreen.normalTheme,
-                            onClickToggle = onClickToggle
+                            onClickToggleTheme = onClickToggleTheme,
+                            areNotificationsEnabled = areNotificationsEnabled,
+                            onClickToggleNotifications = onClickToggleNotifications
                         )
                     }
+                }
 
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 10.dp),
-                        thickness = 1.dp,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.2f)
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.2f)
+                )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 5.dp
                     )
-
+                ) {
                     Row(
-                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         SwitchSettings(
                             text = stringResource(id = R.string.dynamic_theme),
                             setting = SettingsScreen.dynamicTheme,
-                            onClickToggle = onClickToggle
+                            onClickToggleTheme = onClickToggleTheme,
+                            areNotificationsEnabled = areNotificationsEnabled,
+                            onClickToggleNotifications = onClickToggleNotifications
+                        )
+                    }
+                }
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.2f)
+                )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 5.dp
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        SwitchSettings(
+                            text = stringResource(id = R.string.notification),
+                            setting = SettingsScreen.dynamicTheme,
+                            onClickToggleTheme = onClickToggleTheme,
+                            areNotificationsEnabled = areNotificationsEnabled,
+                            onClickToggleNotifications = onClickToggleNotifications
                         )
                     }
                 }
@@ -236,12 +289,12 @@ fun SettingsScreenContent(
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             // sign in option only for anonymous users
-            if (noSignedInUser()) {
-                SignInOutButtons(
-                    buttonText = stringResource(id = R.string.sign_in),
-                    onClickSignInOut = { /*TODO*/ }
-                )
-            }
+//            if (noSignedInUser()) {
+//                SignInOutButtons(
+//                    buttonText = stringResource(id = R.string.sign_in),
+//                    onClickSignInOut = { /*TODO*/ }
+//                )
+//            }
 
             SignInOutButtons(
                 buttonText = stringResource(id = R.string.sign_out),
@@ -277,7 +330,9 @@ private fun SignInOutButtons(
 private fun RowScope.SwitchSettings(
     text: String,
     setting: String,
-    onClickToggle: () -> Unit
+    onClickToggleTheme: () -> Unit,
+    areNotificationsEnabled: Boolean,
+    onClickToggleNotifications: () -> Unit
 ) {
 
     Text(
@@ -290,25 +345,44 @@ private fun RowScope.SwitchSettings(
     )
     Spacer(modifier = Modifier.weight(1f)) // Pushes the Switch to the right end
 
-    Switch(
-        checked = if (setting == SettingsScreen.normalTheme) SettingsViewModel.darkMode.value else SettingsViewModel.dynamicTheme.value,
-        onCheckedChange = {
-            if (setting == SettingsScreen.normalTheme) {
-                SettingsViewModel.darkMode.value = !SettingsViewModel.darkMode.value
-            } else {
-                SettingsViewModel.dynamicTheme.value = !SettingsViewModel.dynamicTheme.value
-            }
-            onClickToggle()
-        },
-        modifier = Modifier
-            .size(50.dp)
-            .padding(horizontal = 16.dp),
-        colors = SwitchDefaults.colors(
-            uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
-            checkedThumbColor = MaterialTheme.colorScheme.primary,
-            checkedTrackColor = MaterialTheme.colorScheme.onPrimary
+    if (text == stringResource(id = R.string.notification)){
+        Switch(
+            checked = areNotificationsEnabled,
+            onCheckedChange = {
+                onClickToggleNotifications()
+            },
+            modifier = Modifier
+                .size(50.dp)
+                .padding(horizontal = 16.dp),
+            colors = SwitchDefaults.colors(
+                uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
+                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                checkedTrackColor = MaterialTheme.colorScheme.onPrimary
+            )
         )
-    )
+    }else{
+        Switch(
+            checked = if (setting == SettingsScreen.normalTheme) SettingsViewModel.darkMode.value else SettingsViewModel.dynamicTheme.value,
+            onCheckedChange = {
+                if (setting == SettingsScreen.normalTheme) {
+                    SettingsViewModel.darkMode.value = !SettingsViewModel.darkMode.value
+                } else {
+                    SettingsViewModel.dynamicTheme.value = !SettingsViewModel.dynamicTheme.value
+                }
+                onClickToggleTheme()
+            },
+            modifier = Modifier
+                .size(50.dp)
+                .padding(horizontal = 16.dp),
+            colors = SwitchDefaults.colors(
+                uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
+                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                checkedTrackColor = MaterialTheme.colorScheme.onPrimary
+            )
+        )
+    }
+
+
 }
 
 
@@ -336,7 +410,9 @@ fun SettingsPreview() {
                     onClickSignOut = {},
                     noSignedInUser = { true },
                     paddingValesFromPreview = paddingVales,
-                    onClickToggle = {}
+                    onClickToggleTheme = {},
+                    areNotificationsEnabled = true,
+                    onClickToggleNotifications = {}
                 )
             }
         }

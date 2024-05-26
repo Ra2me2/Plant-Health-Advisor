@@ -21,7 +21,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -31,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,123 +55,70 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import com.example.planter_app.R
-import com.example.planter_app.appbar_and_navigation_drawer.AppBar
-import com.example.planter_app.retrofit.RetrofitViewModel
-import com.example.planter_app.ui.screens.home.HomeScreen
+import com.example.planter_app.firebase_realtime_database.RealTimeDBViewModel
+import com.example.planter_app.ui.appbar_and_navigation_drawer.AppBar
+import com.example.planter_app.ui.screens.my_plants.MyPlantsScreen
 import com.example.planter_app.ui.screens.my_plants.MyPlantsViewModel
 import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
+import com.example.planter_app.utilities.showToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
-data class PlantDetails(val uri: String, val comingFromMyPlants: Boolean = false) : Screen {
+data class PlantDetails(
+    val uri: String,
+    val plantKey: String? = null,
+    val result: String? = null,
+    val advice: String? = null
+) : Screen {
 
     @Composable
     override fun Content() {
 
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val retrofitViewModel = viewModel<RetrofitViewModel>()
+
         val myPlantsViewModel = viewModel<MyPlantsViewModel>()
         val settingsViewModel = viewModel<SettingsViewModel>()
+        val realTimeDBViewModel = viewModel<RealTimeDBViewModel>()
 
-        val apiLoading =
-            retrofitViewModel.apiResponseLoading.collectAsStateWithLifecycle()
+        val isImageExpanded = myPlantsViewModel.isImageExpanded.collectAsStateWithLifecycle()
 
-
-        val isImageExpanded  = myPlantsViewModel.isImageExpanded.collectAsStateWithLifecycle()
-        val plantNetApiResponse =
-            myPlantsViewModel.plantNetApiResponse.collectAsStateWithLifecycle()
-        val mlModelApiResponseAdvice =
-            myPlantsViewModel.mlModelApiResponseAdvice.collectAsStateWithLifecycle()
-        val mlModelApiResponseResult =
-            myPlantsViewModel.mlModelApiResponseResult.collectAsStateWithLifecycle()
-
+        // display delete icon only if coming from MyPlants Screen
+        MyPlantsViewModel.displayPlantDeleteBottomSheet.value = plantKey!=null
 
         if (MyPlantsViewModel.triggerPlantDeleteBottomSheet.value) {
-            DeletePlant(
+            DeletePlantBottomSheet(
+                onClickDelete = {
+                    realTimeDBViewModel.deletePlantData(key = plantKey!!,
+                        onSuccess = {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                showToast(context, it)
+                            }
+                            navigator.replace(MyPlantsScreen)
+                        },
+                        onFailure = {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                showToast(context, it)
+                            }
+                        })
+                },
                 updateConnectionStatus = {
                     settingsViewModel.updateConnectionStatus()
                 }
             )
         }
 
-        if (comingFromMyPlants) {
-            MyPlantsViewModel.displayPlantDeleteBottomSheet.value = true
-            PlantDetailsContent(
-                isImageExpanded.value,
-                onImageClick = { myPlantsViewModel.setIsImageExpanded(!isImageExpanded.value) },
-                context,
-                uri,
-                result = "from firebase",
-                advice = "from firebase",
-            )
-        }
-        else {
-                // calling plantNetAPI, MLModelAPI getting response
-                LaunchedEffect(Unit) {
-                    retrofitViewModel.setApiResponseLoading(true)
-                    retrofitViewModel.plantNetUploadImage(
-                        uri,
-                        onSuccess = {
-                            myPlantsViewModel.setPlantNetApiResponse(it)
-                            // calling MLModelAPI only if we get a response from PlantNetAPI (avoid API calls in case of none plants)
-                            retrofitViewModel.mLModelUploadImage(
-                                uri,
-                                onSuccessResult = {
-                                    retrofitViewModel.setApiResponseLoading(false)
-                                    myPlantsViewModel.setMlModelApiResponseResult(it)
-                                },
-                                onSuccessAdvice = {
-                                    retrofitViewModel.setApiResponseLoading(false)
-                                    myPlantsViewModel.setMlModelApiResponseAdvice(it)
-                                },
-                                onError = {
-//                    myPlantsViewModel.setMlModelApiResponseError(it)
-                                }
-                            )
-                        },
-                        onError = {
-                            retrofitViewModel.setApiResponseLoading(false)
-                            myPlantsViewModel.setPlantNetApiResponse(it)
-                        }
-                    )
-                }
-            MyPlantsViewModel.displayPlantDeleteBottomSheet.value = false
-
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-
-                if (apiLoading.value){
-                    SettingsViewModel.appBarTitle.value = stringResource(id = R.string.LOADING_SCREEN)
-                    CircularProgressIndicator()
-                }
-                else {
-                    if (plantNetApiResponse.value == "404") {
-                        ErrorBottomSheet(
-                            sheetOpen = true,
-                            backToHomeScreen = {
-                                navigator.replace(HomeScreen)
-                            }
-                        )
-                    } else {
-                        PlantDetailsContent(
-                            isImageExpanded = isImageExpanded.value,
-                            onImageClick = { myPlantsViewModel.setIsImageExpanded(!isImageExpanded.value) },
-                            context,
-                            uri,
-                            result = mlModelApiResponseResult.value,
-                            advice = mlModelApiResponseAdvice.value
-                        )
-                    }
-                }
-            }
-        }
+        PlantDetailsContent(
+            isImageExpanded.value,
+            onImageClick = { myPlantsViewModel.setIsImageExpanded(!isImageExpanded.value) },
+            context,
+            uri,
+            result = result,
+            advice = advice,
+        )
     }
 }
 
@@ -208,7 +153,7 @@ fun PlantDetailsContent(
                 ImageRequest.Builder(context)
                     .data(uri)
                     .apply(block = fun ImageRequest.Builder.() {
-                        crossfade(800)
+                        crossfade(500)
                         scale(scale = Scale.FIT)
                     }).build(),
                 // error = painterResource(),
@@ -268,7 +213,7 @@ fun PlantDetailsContent(
                         )
                         Text(
                             modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-                            text = result?:"Result Not Found",
+                            text = result ?: "Result Not Found",
                         )
                     }
                     Card(
@@ -292,7 +237,7 @@ fun PlantDetailsContent(
 
                         Text(
                             modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
-                            text = advice?:"Advice Not Found",
+                            text = advice ?: "Advice Not Found",
                             textAlign = TextAlign.Justify,
                         )
                     }
@@ -302,67 +247,11 @@ fun PlantDetailsContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ErrorBottomSheet(
-    sheetOpen: Boolean = false,
-    backToHomeScreen: () -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState()
-    var isSheetOpen by remember {
-        mutableStateOf(sheetOpen)
-    }
-
-    if (isSheetOpen) {
-        ModalBottomSheet(
-            sheetState = sheetState,
-            onDismissRequest = {
-                isSheetOpen = false
-                backToHomeScreen()
-            }
-        )
-        {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    painter = painterResource(id = R.drawable.leaf),
-                    contentDescription = "",
-                    contentScale = ContentScale.Crop,
-                    alpha = 0.3f
-                )
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.plant_not_detected),
-                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                        style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text(
-                        text = stringResource(id = R.string.photo_requirement),
-                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                        style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
-                        textAlign = TextAlign.Justify,
-                    )
-                }
-            }
-        }
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeletePlant(
+fun DeletePlantBottomSheet(
+    onClickDelete: () -> Unit,
     updateConnectionStatus: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -411,15 +300,13 @@ fun DeletePlant(
                             modifier = Modifier.padding(20.dp),
                             onClick = {
                                 updateConnectionStatus()
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    if (SettingsViewModel.isNetworkAvailable.value) {
-                                        /* TODO() once firebase database is setup*/
-//                                        isSheetOpen = false
-                                        MyPlantsViewModel.triggerPlantDeleteBottomSheet.value =
-                                            false
-
-                                    }
+//                                CoroutineScope(Dispatchers.Main).launch {
+                                if (SettingsViewModel.isNetworkAvailable.value) {
+                                    onClickDelete()
+                                    MyPlantsViewModel.triggerPlantDeleteBottomSheet.value =
+                                        false
                                 }
+//                                }
                             },
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 2.dp,
@@ -465,6 +352,7 @@ fun DeletePlant(
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark

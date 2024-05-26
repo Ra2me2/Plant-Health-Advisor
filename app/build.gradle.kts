@@ -71,6 +71,9 @@ dependencies {
     implementation(libs.firebase.auth)
 
     implementation(libs.play.services.auth)
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.messaging)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -102,4 +105,6 @@ dependencies {
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation (libs.gson)
+
+    implementation ("com.google.firebase:firebase-analytics:22.0.0")
 }

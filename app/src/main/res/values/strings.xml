@@ -18,6 +18,7 @@
     <!-- Theme Options -->
     <string name="dark_mode">Dark Mode</string>
     <string name="dynamic_theme">Dynamic Theme</string>
+    <string name="notification">Notifications</string>
 
     <!-- Button Labels -->
     <string name="sign_in" >Sign In</string>
@@ -42,5 +43,8 @@
     <string name="disease">Disease</string>
     <string name="treatment">Treatment</string>
     <string name="plant_not_detected">Plant not detected</string>
+
+    <!-- About Screen -->
+    <string name="about_app_description">Simply submit photo of your plant\'s leaf, and our advanced machine learning model will detect if it has any diseases. If a disease is found, we will provide you with tailored treatment plans to help your plant recover, or in case of a healthy plant we will give you an elaborate advice of how to maintain healthy state</string>
 
 </resources>

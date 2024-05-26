@@ -1,5 +1,7 @@
 package com.example.planter_app.ui.screens.my_plants
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -19,6 +22,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -32,7 +39,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -40,7 +48,11 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import com.example.planter_app.R
-import com.example.planter_app.appbar_and_navigation_drawer.AppBar
+import com.example.planter_app.firebase_realtime_database.Plant
+import com.example.planter_app.firebase_realtime_database.RealTimeDBViewModel
+import com.example.planter_app.room_database.PlantTable
+import com.example.planter_app.room_database.RoomViewModel
+import com.example.planter_app.ui.appbar_and_navigation_drawer.AppBar
 import com.example.planter_app.ui.screens.my_plants.plant_details.PlantDetails
 import com.example.planter_app.ui.screens.settings.SettingsViewModel
 import com.example.planter_app.ui.theme.Planter_appTheme
@@ -52,25 +64,73 @@ object MyPlantsScreen : Screen {
         SettingsViewModel.appBarTitle.value = stringResource(id = R.string.MY_PLANTS_SCREEN_TITLE)
         val navigator = LocalNavigator.currentOrThrow
 
-        MyPlantsScreenContent(
-            paddingValues = PaddingValues(top = 0.dp),
-            onClickCard = {image ->
-                navigator.push(PlantDetails(
-                    image,
-                    comingFromMyPlants = true
-                ))
+        val realTimeDBViewModel = viewModel<RealTimeDBViewModel>()
+        val settingsViewModel = viewModel<SettingsViewModel>()
+        val myPlantsViewModel = viewModel<MyPlantsViewModel>()
+
+        val plantsFromFirebase by myPlantsViewModel.plantsList.collectAsStateWithLifecycle()
+
+        settingsViewModel.updateConnectionStatus()
+        if (SettingsViewModel.isNetworkAvailable.value){
+            LaunchedEffect(Unit) {
+                realTimeDBViewModel.fetchPlantData(
+                    onSuccess = { plants ->
+                        myPlantsViewModel.setPlantsList(plants)
+                    },
+                    onFailure = {
+                        Log.i("TAG", "MyPlantsScreen: error: $it")
+                    }
+                )
             }
-        )
+
+            if (plantsFromFirebase == null){
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ){
+                    CircularProgressIndicator()
+                }
+
+            }else{
+                if (plantsFromFirebase!!.isNotEmpty()){
+                    MyPlantsScreenContent(
+                        paddingValues = PaddingValues(top = 0.dp),
+                        onClickCard = {img,result,advice,key->
+                            navigator.push(
+                                PlantDetails(
+                                    uri = img,
+                                    plantKey = key,
+                                    result = result,
+                                    advice = advice
+                                )
+                            )
+                        },
+                        plantList = plantsFromFirebase!!.toList()
+                    )
+                }else{
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+                        Text(text = "No plants", color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        }else{
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+                Text(text = stringResource(id = R.string.no_internet), color = MaterialTheme.colorScheme.error)
+            }
+        }
 
     }
 }
 
+
 @Composable
 fun MyPlantsScreenContent(
-    comingFromPreview: Boolean? = false, paddingValues: PaddingValues,
-    onClickCard: (String) -> Unit
-) {
-    val image1 = "https://cdn.pixabay.com/photo/2024/01/07/15/53/ai-generated-8493482_960_720.jpg"
+    comingFromPreview: Boolean? = false,
+    paddingValues: PaddingValues,
+    onClickCard: (String, String, String, String) -> Unit,
+    plantList: List<Plant>,
+    ) {
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -90,21 +150,31 @@ fun MyPlantsScreenContent(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(10) {
-            Images(
-                image1,
-                comingFromPreview!!,
-                onClickCard
-            )
+        item{
+            plantList.forEach { plant->
+                PlantsCard(
+                    image = plant.image,
+                    result = plant.disease,
+                    advice = plant.treatment,
+                    key = plant.key,
+                    date = plant.date,
+                    comingFromPreview = comingFromPreview!!,
+                    onClickCard
+                )
+            }
         }
     }
 }
 
 @Composable
-fun Images(
+fun PlantsCard(
     image: String,
+    result: String,
+    advice: String,
+    key: String,
+    date: String,
     comingFromPreview: Boolean,
-    onClickCard: (String) -> Unit
+    onClickCard: (String,String,String,String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -118,8 +188,7 @@ fun Images(
             defaultElevation = 5.dp
         ),
         onClick = {
-            /* TODO() */
-            onClickCard(image)
+            onClickCard(image,result,advice,key)
         }
     ) {
         Row(
@@ -130,11 +199,11 @@ fun Images(
                     ImageRequest.Builder(LocalContext.current)
                         .data(data = image)
                         .apply(block = fun ImageRequest.Builder.() {
-                            crossfade(1000)
+                            crossfade(500)
                             scale(scale = Scale.FIT)
                         }).build(),
-                    //                    error = painterResource(),
-                    //                    placeholder = painterResource()
+                    error = painterResource(R.drawable.image_not_available),
+                    placeholder = painterResource(R.drawable.image_not_available)
                 )
             } else {
                 painterResource(id = R.drawable.tree_robots_11)
@@ -148,8 +217,10 @@ fun Images(
             )
             Column {
                 Text(
-                    text = "Disease: {X}",
+                    text = result,
                     modifier = Modifier.padding(10.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Start,
                     style = TextStyle(
                         fontSize = 16.sp,
@@ -158,18 +229,18 @@ fun Images(
                 )
 
                 Text(
-                    text = "Treatment: {asdasasdsadasdasdasdasdasd asdsad asd asd asd asd asd asd asd asdsgfsg df dgh fgh fg gfhgf hgf gfh }",
+                    text = advice,
                     modifier = Modifier.padding(10.dp),
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Justify,
+                    textAlign = TextAlign.Start,
                     style = TextStyle(
                         fontSize = 16.sp,
                     )
                 )
 
                 Text(
-                    text = "14 Jan 2024",
+                    text = date,
                     modifier = Modifier.padding(10.dp),
                     style = TextStyle(
                         fontSize = 12.sp,
@@ -201,8 +272,10 @@ fun MyPlantsScreenPreview() {
             ) { paddingValues ->
                 MyPlantsScreenContent(
                     comingFromPreview = true,
-                    paddingValues,
-                    onClickCard = {})
+                paddingValues=PaddingValues(),
+                onClickCard= {x,y,z,b->},
+                plantList =  listOf<Plant>(),
+                )
             }
         }
     }
