@@ -71,7 +71,8 @@ fun CallAPI(
             photoFilePathUri,
             onSuccessResult = {
                 loading.value = false
-                onSuccessModelResult(it)
+                val formattedResult = it.replace("_+".toRegex(), " ")
+                onSuccessModelResult(formattedResult)
             },
             onSuccessAdvice = {
                 loading.value = false

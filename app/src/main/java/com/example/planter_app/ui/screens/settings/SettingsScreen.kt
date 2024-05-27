@@ -1,5 +1,6 @@
 package com.example.planter_app.ui.screens.settings
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -78,6 +79,7 @@ object SettingsScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val settingsViewModel = viewModel<SettingsViewModel>()
         val notificationUtils = NotificationUtils()
+        SettingsViewModel.areNotificationsEnabled.value = notificationUtils.areNotificationsEnabled()
 
         val profilePicture = if (googleAuthUiClient.getSignedInUser()?.profilePictureURL != null) {
             googleAuthUiClient.getSignedInUser()?.profilePictureURL
