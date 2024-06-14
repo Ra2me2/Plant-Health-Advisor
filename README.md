@@ -1,14 +1,10 @@
 ![Title](Screenshots/title.png)
 
-<div style="display: flex; justify-content: center; align-items: center;">
-  <div style="flex: 100%; padding: 5px; text-align: center;">
-    <img src="Screenshots/8.jpg" alt="Screenshot 2" style="height: 500px; border: 1px solid #ccc;">
-    <p>Caption for Screenshot 2</p>
-  </div>
-</div>
+| <img src="Screenshots/8.jpg" alt="Screenshot 2" style="height: 400px; border: 1px solid #ccc;"> | <img src="Screenshots/4.jpg" alt="Screenshot 3" style="height: 400px; border: 1px solid #ccc;"> |
+|---|---|
+| Caption for Screenshot 2 | Caption for Screenshot 3 |
 
-<div style="display: flex; justify-content: center; align-items: center;"> <img src="Screenshots/4.jpg" alt="Screenshot 3" style="height: 500px; border: 1px solid #ccc;">
-  <p>Caption for Screenshot 3</p>
-  <img src="Screenshots/5.jpg" alt="Screenshot 1" style="height: 500px; border: 1px solid #ccc;">
-  <p>Caption for Screenshot 1</p>
-</div>
+| <img src="Screenshots/5.jpg" alt="Screenshot 1" style="height: 400px; border: 1px solid #ccc;"> | |
+|---|---|
+| Caption for Screenshot 1 | |
+
