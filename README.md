@@ -1,2 +1,2 @@
 # Plant Health Advisor
-![Banner Image](title.jpg)
+![Banner Image](title.png)
