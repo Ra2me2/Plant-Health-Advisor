@@ -7,13 +7,8 @@
   </div>
 </div>
 
-<div style="display: flex; justify-content: center; align-items: center;">
-  <div style="flex: 50%; padding: 5px; text-align: center;">
-    <img src="Screenshots/4.jpg" alt="Screenshot 3" style="height: 500px; border: 1px solid #ccc;">
-    <p>Caption for Screenshot 3</p>
-  </div>
-  <div style="flex: 50%; padding: 5px; text-align: center;">
-    <img src="Screenshots/5.jpg" alt="Screenshot 1" style="height: 500px; border: 1px solid #ccc;">
-    <p>Caption for Screenshot 1</p>
-  </div>
+<div style="display: flex; justify-content: center; align-items: center;"> <img src="Screenshots/4.jpg" alt="Screenshot 3" style="height: 500px; border: 1px solid #ccc;">
+  <p>Caption for Screenshot 3</p>
+  <img src="Screenshots/5.jpg" alt="Screenshot 1" style="height: 500px; border: 1px solid #ccc;">
+  <p>Caption for Screenshot 1</p>
 </div>
