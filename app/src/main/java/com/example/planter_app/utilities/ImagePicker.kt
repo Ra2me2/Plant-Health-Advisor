@@ -87,6 +87,10 @@ fun singlePhotoPickerFromGallery(
         )
     }
 
+    if(!modelError.value.isNullOrBlank()){
+        showToast(MyApplication.instance!!.applicationContext, modelError.value.toString())
+    }
+
     return singlePhotoPicker
 }
 

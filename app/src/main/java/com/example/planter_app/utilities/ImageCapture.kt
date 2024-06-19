@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import cafe.adriel.voyager.navigator.Navigator
+import com.example.planter_app.MyApplication
 import com.example.planter_app.ui.screens.my_plants.plant_details.PlantDetails
 import java.io.File
 import java.io.FileOutputStream
@@ -110,6 +111,9 @@ fun captureImageFromCamera(navigator: Navigator): Triple<Uri, ManagedActivityRes
         )
     }
 
+    if(!modelError.value.isNullOrBlank()){
+        showToast(MyApplication.instance!!.applicationContext, modelError.value.toString())
+    }
 
     return Triple(uri, permissionLauncher, cameraLauncher)
 }
