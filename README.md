@@ -8,11 +8,11 @@
 
 ## Screenshots
 <div style="display: flex; flex-wrap: wrap;">
-  <img src="Screenshots/1.jpg" alt="Screenshot 1" style="height: 400px; margin: 10px; border: 0px solid #ccc;">
-  <img src="Screenshots/2.jpg" alt="Screenshot 2" style="height: 400px; margin: 10px; border: 0px solid #ccc;">
-  <img src="Screenshots/4.jpg" alt="Screenshot 3" style="height: 400px; margin: 10px; border: 0px solid #ccc;">
-  <img src="Screenshots/5.jpg" alt="Screenshot 4" style="height: 400px; margin: 10px; border: 0px solid #ccc;">
-  <img src="Screenshots/7.jpg" alt="Screenshot 5" style="height: 400px; margin: 10px; border: 0px solid #ccc;">
+  <img src="Screenshots/1.jpg" alt="Screenshot 1" style="height: 500px; margin: 10px; border: 0px solid #ccc;">
+  <img src="Screenshots/2.jpg" alt="Screenshot 2" style="height: 500px; margin: 10px; border: 0px solid #ccc;">
+  <img src="Screenshots/4.jpg" alt="Screenshot 3" style="height: 500px; margin: 10px; border: 0px solid #ccc;">
+  <img src="Screenshots/5.jpg" alt="Screenshot 4" style="height: 500px; margin: 10px; border: 0px solid #ccc;">
+  <img src="Screenshots/7.jpg" alt="Screenshot 5" style="height: 500px; margin: 10px; border: 0px solid #ccc;">
 </div>
 
 ## Technologies Used
